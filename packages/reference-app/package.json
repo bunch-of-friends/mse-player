@@ -1,6 +1,6 @@
 {
     "name": "@mse-player/reference-app",
-    "version": "0.0.1-alpha",
+    "version": "0.0.1-alpha1",
     "description": "",
     "scripts": {
         "compile": "webpack",
@@ -10,7 +10,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@mse-player/main": "0.0.1-alpha"
+        "@mse-player/main": "^0.0.1-alpha1"
     },
     "devDependencies": {
         "clean-webpack-plugin": "^0.1.18",
@@ -19,5 +19,8 @@
         "ts-loader": "^3.5.0",
         "webpack": "^3.11.0",
         "webpack-dev-server": "^2.11.1"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

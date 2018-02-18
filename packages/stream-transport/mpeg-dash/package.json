@@ -1,6 +1,6 @@
 {
     "name": "@mse-player/transport-mpeg-dash",
-    "version": "0.0.1-alpha",
+    "version": "0.0.1-alpha1",
     "description": "",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -8,5 +8,8 @@
         "compile": "tsc",
         "compile:watch": "tsc -w",
         "cleanup": "rimraf -rf dist"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }
