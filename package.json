@@ -14,14 +14,17 @@
     "start:demo": "(cd packages/demo && npm run start)",
     "cleanup": "lerna run cleanup --stream --parallel",
     "demo": "npm run build && (cd packages/demo && npm run start)",
-    "postinstall": "lerna bootstrap",
+    "lint": "tslint '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**'",
     "reset": "npm run cleanup && lerna clean && npm i",
-    "prepublish": "npm run build",
-    "publish": "lerna publish --force-publish=*"
+    "publish": "lerna publish --force-publish=*",
+    "postinstall": "lerna bootstrap",
+    "prepublish": "npm run build"
   },
   "devDependencies": {
-    "lerna": "^2.5.1",
+    "lerna": "^2.9.0",
     "rimraf": "^2.6.2",
-    "typescript": "^2.7.1"
+    "tslint": "^5.9.1",
+    "tslint-eslint-rules": "^5.0.0",
+    "typescript": "^2.7.2"
   }
 }
