@@ -15,7 +15,7 @@
     "start:demo": "(cd packages/demo && npm run start)",
     "cleanup": "lerna run cleanup --stream --parallel",
     "demo": "npm run build && (cd packages/demo && npm run start)",
-    "lint": "tslint '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**'",
+    "lint": "tslint --fix '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**'",
     "reset": "npm run cleanup && lerna clean && npm i",
     "publish": "lerna publish --force-publish=*",
     "postinstall": "lerna bootstrap",
