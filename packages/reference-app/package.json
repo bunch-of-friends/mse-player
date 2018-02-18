@@ -3,7 +3,7 @@
     "version": "0.0.1-alpha1",
     "scripts": {
         "compile": "webpack",
-        "cleanup": "rimraf -rf dist",
+        "cleanup": "rimraf -rf dist coverage",
         "start": "webpack-dev-server --watch-content-base --open"
     },
     "dependencies": {

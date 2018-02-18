@@ -1,6 +1,7 @@
 {
     "verbose": true,
     "collectCoverage": true,
+    "coverageReporters": ["lcov", "json"],
     "collectCoverageFrom": [
         "**/src/**"
     ],
