@@ -1,0 +1,12 @@
+{
+    "name": "@mse-player/core",
+    "version": "0.0.1-alpha",
+    "description": "",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "compile": "tsc",
+        "compile:watch": "tsc -w",
+        "cleanup": "rimraf -rf dist"
+    }
+}

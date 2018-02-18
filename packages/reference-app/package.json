@@ -1,0 +1,23 @@
+{
+    "name": "@mse-player/reference-app",
+    "version": "0.0.1-alpha",
+    "description": "",
+    "scripts": {
+        "compile": "webpack",
+        "cleanup": "rimraf -rf dist",
+        "start": "webpack-dev-server --watch-content-base --open"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@mse-player/main": "0.0.1-alpha"
+    },
+    "devDependencies": {
+        "clean-webpack-plugin": "^0.1.18",
+        "html-webpack-plugin": "^2.30.1",
+        "serve": "^6.4.9",
+        "ts-loader": "^3.5.0",
+        "webpack": "^3.11.0",
+        "webpack-dev-server": "^2.11.1"
+    }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "mse-player",
+  "version": "0.0.1-alpha",
+  "license": "MIT",
+  "contributors": [
+    {
+      "name": "David Bohunek",
+      "email": "bohunek@gmail.com"
+    }
+  ],
+  "scripts": {
+    "build": "npm run cleanup && lerna run compile",
+    "build:watch": "npm run cleanup && lerna run compile:watch --stream",
+    "start:demo": "(cd packages/demo && npm run start)",
+    "cleanup": "lerna run cleanup --stream --parallel",
+    "demo": "npm run build && (cd packages/demo && npm run start)",
+    "postinstall": "lerna bootstrap",
+    "reset": "npm run cleanup && rm -rf node_modules && npm i"
+  },
+  "devDependencies": {
+    "lerna": "^2.5.1",
+    "rimraf": "^2.6.2",
+    "typescript": "^2.7.1"
+  }
+}
