@@ -3,6 +3,7 @@
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg?style=flat-square)](https://gitter.im/mse-player/)
 [![License](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](https://github.com/bunch-of-friends/mse-player/blob/master/LICENSE)
 [![npm version](https://badge.fury.io/js/%40mse-player%2Fmain.svg)](https://badge.fury.io/js/%40mse-player%2Fmain)
+[![CircleCI](https://circleci.com/gh/bunch-of-friends/mse-player/tree/master.svg?style=svg)](https://circleci.com/gh/bunch-of-friends/mse-player/tree/master)
 
 Modular and extensible video player built on [Media Source Extensions](https://en.wikipedia.org/wiki/Media_Source_Extensions) and [Encrypted Media extensions](https://en.wikipedia.org/wiki/Encrypted_Media_Extensions), written in TypeScript.
 
