@@ -9,6 +9,7 @@
     }
   ],
   "scripts": {
+    "test": "lerna run test",
     "build": "npm run cleanup && lerna run compile",
     "build:watch": "npm run cleanup && lerna run compile:watch --stream",
     "start:demo": "(cd packages/demo && npm run start)",
@@ -21,8 +22,11 @@
     "prepublish": "npm run build"
   },
   "devDependencies": {
+    "@types/jest": "^22.1.3",
+    "jest": "^22.3.0",
     "lerna": "^2.9.0",
     "rimraf": "^2.6.2",
+    "ts-jest": "^22.0.4",
     "tslint": "^5.9.1",
     "tslint-eslint-rules": "^5.0.0",
     "typescript": "^2.7.2"

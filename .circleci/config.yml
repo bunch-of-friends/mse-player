@@ -1,17 +1,24 @@
-machine:
-  node:
-    version: 8.9.1  
+version: 2
+jobs:
+  build:
+    docker:
+      - image: node:8
+    steps:
+      - checkout
+      - run: yarn --version
 
-dependencies:
-  pre:
-    - node --version
-    - npm --version
+      - restore_cache:
+        keys:
+        - v1-dependencies-{{ checksum "package-lock.json" }}
+        - v1-dependencies-
 
-dependencies:
-  override:
-    - npm install
+      - run: npm install
 
-test:
-  override:
-    - npm run lint
-    - npm test
+      - run: npm run lint
+
+      - run: npm run test
+
+      - save_cache:
+        paths:
+          - node_modules
+        key: v1-dependencies-{{ checksum "package-lock.json" }}
