@@ -15,7 +15,9 @@
     "cleanup": "lerna run cleanup --stream --parallel",
     "demo": "npm run build && (cd packages/demo && npm run start)",
     "postinstall": "lerna bootstrap",
-    "reset": "npm run cleanup && rm -rf node_modules && npm i"
+    "reset": "npm run cleanup && lerna clean && npm i",
+    "prepublish": "npm run build",
+    "publish": "lerna publish --force-publish=*"
   },
   "devDependencies": {
     "lerna": "^2.5.1",
