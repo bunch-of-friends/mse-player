@@ -5,7 +5,7 @@ jobs:
       - image: node:8
     steps:
       - checkout
-      - run: yarn --version
+      - run: npm --version
 
       - restore_cache:
           keys:
@@ -22,4 +22,3 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package-lock.json" }}
-          
