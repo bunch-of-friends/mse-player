@@ -9,6 +9,7 @@
     }
   ],
   "scripts": {
+    "bootstrap": "npm install lerna && lerna bootstrap",
     "test": "lerna run test",
     "build": "npm run cleanup && lerna run compile",
     "build:watch": "npm run cleanup && lerna run compile:watch --stream",
@@ -16,9 +17,8 @@
     "cleanup": "lerna run cleanup --stream --parallel",
     "demo": "npm run build && (cd packages/demo && npm run start)",
     "lint": "tslint --fix '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**'",
-    "reset": "npm run cleanup && lerna clean && npm i",
+    "reset": "npm run cleanup && rimraf -rf node_modules",
     "publish": "lerna publish --force-publish=*",
-    "postinstall": "lerna bootstrap",
     "prepublish": "npm run build"
   },
   "devDependencies": {
