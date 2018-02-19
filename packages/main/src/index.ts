@@ -1,1 +1,1 @@
-export { Player } from './player';
+export { createPlayer } from './api/create-player';

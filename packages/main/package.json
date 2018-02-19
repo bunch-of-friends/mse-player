@@ -9,10 +9,10 @@
         "compile:watch": "tsc -w",
         "cleanup": "rimraf -rf dist coverage"
     },
+    "dependencies": {
+        "@mse-player/core": "^0.0.1-alpha1"
+    },
     "publishConfig": {
         "access": "public"
-    },
-    "jest": {
-
     }
 }

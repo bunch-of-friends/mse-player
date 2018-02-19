@@ -1,9 +1,11 @@
-import { Observer } from './observer';
+export interface Observer<T> {
+    (newState: T, previousState?: T): void;
+}
 
 export class Observable<T> {
 
     private internalCurrentState: T = null;
-    private registeredObservers = new Array<{ observer: Observer<T>, owner: any }>();
+    private registeredObservers = new Array<{ observer: Observer<T>, owner: Object }>();
 
     private shouldNotifyOnlyIfNewStateDiffers = false;
 
@@ -22,6 +24,8 @@ export class Observable<T> {
         if (observer) {
             this.registeredObservers.push({ observer, owner });
         }
+
+        return observer;
     }
 
     public unregisterObserver(observer: Observer<T>) {
@@ -34,15 +38,15 @@ export class Observable<T> {
         });
     }
 
-    public unregisterObserversOfOwner(owner: Object): void {
+    public unregisterObserversOfOwner(owner: Object) {
         this.registeredObservers = this.registeredObservers.filter(item => item.owner !== owner);
     }
 
-    public unregisterAllObservers(): void {
+    public unregisterAllObservers() {
         this.registeredObservers = [];
     }
 
-    public notifyObservers(newState?: T): void {
+    public notifyObservers(newState?: T) {
         if (this.shouldNotifyOnlyIfNewStateDiffers && newState === this.internalCurrentState) {
             return;
         }

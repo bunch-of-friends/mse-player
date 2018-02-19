@@ -1,4 +1,4 @@
-import { Player } from '../player/';
+import { Player } from './player';
 import { createVideoElement } from '../dom/create-video-element';
 
 const players = new Array<{ player: Player, videoElement: HTMLVideoElement }>();

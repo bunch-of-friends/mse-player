@@ -1,6 +1,5 @@
 
-import { Observable } from '../src/events/observable';
-import { Observer } from '../src/events/observer';
+import { Observable, Observer } from '../src/events/observable';
 
 describe('Observable', () => {
     const callbacksOwner = {};
