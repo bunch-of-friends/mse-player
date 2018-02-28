@@ -1,5 +1,5 @@
 {
-    "name": "@mse-player/transport-simple",
+    "name": "@mse-player/simple-stream-transport",
     "version": "0.0.1-alpha1",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",

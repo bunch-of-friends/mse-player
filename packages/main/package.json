@@ -10,7 +10,8 @@
         "cleanup": "rimraf -rf dist coverage"
     },
     "dependencies": {
-        "@mse-player/core": "^0.0.1-alpha1"
+        "@mse-player/core": "^0.0.1-alpha1",
+        "@bunch-of-friends/observable": "^1.0.0"
     },
     "publishConfig": {
         "access": "public"
