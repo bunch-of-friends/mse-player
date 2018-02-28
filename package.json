@@ -2,23 +2,22 @@
   "name": "mse-player",
   "version": "0.0.1-alpha",
   "license": "MIT",
-  "contributors": [
+  "maitainers": [
     {
       "name": "David Bohunek",
       "email": "bohunek@gmail.com"
     }
   ],
   "scripts": {
-    "bootstrap": "npm install lerna && lerna bootstrap",
+    "bootstrap": "npm install lerna && lerna bootstrap && npm install",
+    "reset": "npm run cleanup && rimraf -rf node_modules && npm run bootstrap",
     "test": "lerna run test",
     "build": "npm run cleanup && lerna run compile",
     "build:watch": "npm run cleanup && lerna run compile:watch --stream",
-    "start:demo": "(cd packages/demo && npm run start)",
     "cleanup": "lerna run cleanup --stream --parallel",
-    "demo": "npm run build && (cd packages/demo && npm run start)",
+    "demo": "npm run build && (cd packages/demo-app && npm run start)",
     "lint": "tslint --fix '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**'",
-    "reset": "npm run cleanup && rimraf -rf node_modules",
-    "publish": "lerna publish --force-publish=*",
+    "publish": "lerna publish --force-publish=* --skip-npm --skip-git",
     "prepublish": "npm run build"
   },
   "devDependencies": {
