@@ -27,7 +27,7 @@ export function createSession(sessionOptions: SessionOptions, videoElement: HTML
         },
         play() {
             if (videoElement.paused) {
-                videoElement.play(); //TODO: handle promise
+                videoElement.play(); // TODO: handle promise
             }
         },
         seek(position: number) {

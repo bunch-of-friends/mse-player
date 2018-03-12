@@ -1,11 +1,11 @@
 import { Player, Session, createPlayer } from '@mse-player/main';
 
 const player = createPlayer(document.getElementById('video') as HTMLVideoElement);
-wireUpButtons(player);
+wireUpButtons();
 
 let session: Session | null;
 
-export function wireUpButtons(player: Player) {
+export function wireUpButtons() {
     const loadButton = document.getElementById('load') as HTMLButtonElement;
     loadButton.onclick = function () {
         session = player.startSession({ url: 'https://www.quirksmode.org/html5/videos/big_buck_bunny.mp4', autoPlay: true, position: 0 });
@@ -20,7 +20,7 @@ export function wireUpButtons(player: Player) {
         session.stop().then(() => {
             loadButton.disabled = false;
         });
-    }
+    };
 
     const pauseButton = document.getElementById('pause') as HTMLButtonElement;
     pauseButton.onclick = function() {
@@ -28,7 +28,7 @@ export function wireUpButtons(player: Player) {
             return;
         }
         session.pause();
-    }
+    };
 
     const resumeButton = document.getElementById('resume') as HTMLButtonElement;
     resumeButton.onclick = function() {
@@ -36,5 +36,5 @@ export function wireUpButtons(player: Player) {
             return;
         }
         session.play();
-    }
+    };
 }
