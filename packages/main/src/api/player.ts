@@ -22,5 +22,5 @@ export function createPlayer(videoElement: HTMLVideoElement): Player {
                 });
             }
         }
-    }
+    };
 }

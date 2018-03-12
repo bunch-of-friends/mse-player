@@ -2,7 +2,7 @@ import { Observable } from '@bunch-of-friends/observable';
 
 export interface SessionOptions {
     url: string;
-    autoPlay: boolean,
+    autoPlay: boolean;
     position: number;
 }
 
@@ -38,5 +38,5 @@ export function createSession(sessionOptions: SessionOptions, videoElement: HTML
             videoElement.load();
             return Promise.resolve();
         }
-    }
+    };
 }
