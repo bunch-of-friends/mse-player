@@ -1,7 +1,40 @@
-import * as msePlayer from '@mse-player/main';
+import { Player, Session, createPlayer } from '@mse-player/main';
 
-// const videoElement = document.createElement('video');
-// document.body.appendChild(videoElement);
+const player = createPlayer(document.getElementById('video') as HTMLVideoElement);
+wireUpButtons(player);
 
-// const player = new Player(videoElement);
-// player.load({ url: 'https://www.quirksmode.org/html5/videos/big_buck_bunny.mp4'});
+let session: Session | null;
+
+export function wireUpButtons(player: Player) {
+    const loadButton = document.getElementById('load') as HTMLButtonElement;
+    loadButton.onclick = function () {
+        session = player.startSession({ url: 'https://www.quirksmode.org/html5/videos/big_buck_bunny.mp4', autoPlay: true, position: 0 });
+        loadButton.disabled = true;
+    };
+
+    const stopButton = document.getElementById('stop') as HTMLButtonElement;
+    stopButton.onclick = function () {
+        if (!session) {
+            return;
+        }
+        session.stop().then(() => {
+            loadButton.disabled = false;
+        });
+    }
+
+    const pauseButton = document.getElementById('pause') as HTMLButtonElement;
+    pauseButton.onclick = function() {
+        if (!session) {
+            return;
+        }
+        session.pause();
+    }
+
+    const resumeButton = document.getElementById('resume') as HTMLButtonElement;
+    resumeButton.onclick = function() {
+        if (!session) {
+            return;
+        }
+        session.play();
+    }
+}
