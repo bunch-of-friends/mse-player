@@ -3,4 +3,4 @@ dist
 node_modules
 coverage
 *.log
-packages/**/package.json
+packages/**/package-lock.json

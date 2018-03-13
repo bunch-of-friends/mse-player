@@ -1,0 +1,23 @@
+{
+    "name": "@mse-player/demo-app",
+    "version": "0.0.1-alpha1",
+    "scripts": {
+        "compile": "webpack",
+        "cleanup": "rimraf -rf dist coverage",
+        "start": "webpack-dev-server --watch-content-base --open"
+    },
+    "dependencies": {
+        "@mse-player/main": "^0.0.1-alpha1"
+    },
+    "devDependencies": {
+        "clean-webpack-plugin": "^0.1.18",
+        "html-webpack-plugin": "^2.30.1",
+        "serve": "^6.4.9",
+        "ts-loader": "^3.5.0",
+        "webpack": "^3.11.0",
+        "webpack-dev-server": "^2.11.1"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
