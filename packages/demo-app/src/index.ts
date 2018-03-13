@@ -1,4 +1,4 @@
-import { Player, Session, createPlayer } from '@mse-player/main';
+import { Session, createPlayer } from '@mse-player/main';
 
 const player = createPlayer(document.getElementById('video') as HTMLVideoElement);
 wireUpButtons();

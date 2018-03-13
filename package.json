@@ -16,8 +16,8 @@
     "build:watch": "npm run cleanup && lerna run compile:watch --stream",
     "cleanup": "lerna run cleanup --stream --parallel",
     "demo": "npm run build && (cd packages/demo-app && npm run start)",
-    "lint": "tslint '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**'",
-    "lint:fix": "tslint --fix '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**'",
+    "lint": "lerna run lint --parallel",
+    "lint:fix": "npm run lint -- -- -- --fix",
     "publish": "lerna publish --force-publish=* --skip-npm --skip-git",
     "prepublish": "npm run build"
   },

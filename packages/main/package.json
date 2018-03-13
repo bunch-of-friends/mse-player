@@ -7,7 +7,8 @@
         "test": "jest --config ../../jest.config.json --rootDir",
         "compile": "tsc",
         "compile:watch": "tsc -w",
-        "cleanup": "rimraf -rf dist coverage"
+        "cleanup": "rimraf -rf dist coverage",
+        "lint": "tslint '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**' -p ."
     },
     "dependencies": {
         "@mse-player/core": "^0.0.1-alpha1",

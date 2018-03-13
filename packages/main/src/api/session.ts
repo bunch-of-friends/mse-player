@@ -1,5 +1,3 @@
-import { Observable } from '@bunch-of-friends/observable';
-
 export interface SessionOptions {
     url: string;
     autoPlay: boolean;
