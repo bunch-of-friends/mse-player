@@ -1,5 +1,5 @@
 {
-    "name": "@mse-player/transport-simple",
+    "name": "@mse-player/simple-stream-transport",
     "version": "0.0.1-alpha1",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -7,7 +7,8 @@
         "test": "jest --config ../../../jest.config.json --rootDir",
         "compile": "tsc",
         "compile:watch": "tsc -w",
-        "cleanup": "rimraf -rf dist coverage"
+        "cleanup": "rimraf -rf dist coverage",
+        "lint": "tslint '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**' -p ."
     },
     "publishConfig": {
         "access": "public"

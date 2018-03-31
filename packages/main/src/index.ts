@@ -1,1 +1,2 @@
-export { Player } from './player';
+export { Player, createPlayer } from './api/player';
+export { Session } from './api/session';

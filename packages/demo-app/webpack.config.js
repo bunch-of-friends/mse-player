@@ -12,11 +12,11 @@ const config = {
     plugins: [
         new CleanWebpackPlugin(['dist']),
         new HtmlWebpackPlugin({
-            title: 'MSE-player demo'
+            template: 'src/index.html'
         })
     ],
     devServer: {
-        contentBase: ['node_modules', 'src' ]
+        contentBase: ['node_modules', 'src']
     },
     output: {
         filename: '[name].bundle.js',
