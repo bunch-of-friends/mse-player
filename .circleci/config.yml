@@ -12,7 +12,7 @@ jobs:
           - v1-dependencies-{{ checksum "package-lock.json" }}
           - v1-dependencies-
 
-      - run: npm run bootstrap
+      - run: npm install
 
       - run: npm run lint
 
