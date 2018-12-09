@@ -9,18 +9,20 @@
         }
     ],
     "scripts": {
-        "postinstall": "lerna bootstrap",
-        "reset": "npm run cleanup && rimraf -rf node_modules && npm install",
-        "test": "lerna run test",
-        "build": "lerna run build",
-        "build:watch": "lerna run build:watch --stream --no-sort",
-        "cleanup": "lerna run cleanup --stream --parallel",
-        "demo": "npm run build && (cd packages/demo-app && npm run start)",
-        "demo:watch": "npm run demo & npm run build:watch",
-        "lint": "tslint '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**'",
-        "prettier": "prettier --write '**/**/*.{ts,tsx,css}'",
+        "build": "npm run build:libs && npm run build:demo-app",
+        "build:libs": "lerna run build --ignore demo-app",
+        "build:demo-app": "lerna run build --scope demo-app",
+        "build:package": "lerna run build --scope",
+        "test": "lerna run test --ignore demo-app",
+        "test:package": "lerna run test --scope",
+        "cleanup": "lerna run cleanup --parallel",
+        "rebuild": "npm run cleanup && npm run build",
+        "lint": "tslint '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**' -e",
+        "prettier": "prettier --write '**/**/*.{ts,tsx,css}' '!**/coverage/**'",
+        "reset": "lerna clean --yes && rimraf -rf node_modules && npm i",
+        "prepublish": "npm run rebuild",
         "publish": "lerna publish --force-publish=* --skip-npm --skip-git",
-        "prepublish": "npm run build"
+        "postinstall": "lerna bootstrap"
     },
     "devDependencies": {
         "@types/jest": "^23.3.10",
@@ -30,8 +32,8 @@
         "rimraf": "^2.6.2",
         "ts-jest": "^23.10.5",
         "tslint": "^5.11.0",
-        "tslint-config-bunch-of-friends": "^1.0.2",
-        "tslint-config-prettier": "^1.15.0",
+        "tslint-config-bunch-of-friends": "^1.0.3",
+        "tslint-config-prettier": "^1.17.0",
         "tslint-eslint-rules": "^5.4.0",
         "tslint-plugin-prettier": "^2.0.1",
         "typescript": "^3.2.2"

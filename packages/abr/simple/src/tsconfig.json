@@ -1,6 +1,7 @@
 {
-  "extends": "../../../../.tsconfig/src.json",
-  "compilerOptions": {
-    "outDir": "../dist"
-  }
+    "extends": "../../../../.tsconfig/src.json",
+    "compilerOptions": {
+        "outDir": "../dist"
+    },
+    "references": [{ "path": "../../../core/src" }]
 }

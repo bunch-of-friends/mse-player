@@ -6,7 +6,6 @@
     "scripts": {
         "test": "jest --config ../../../jest.config.json --rootDir",
         "build": "tsc -b ./src/tsconfig.json",
-        "build:watch": "npm run build -- -watch",
         "cleanup": "rimraf -rf dist coverage"
     },
     "dependencies": {

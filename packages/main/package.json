@@ -6,14 +6,13 @@
     "scripts": {
         "test": "jest --config ../../jest.config.json --rootDir",
         "build": "tsc -b ./src/tsconfig.json",
-        "build:watch": "npm run build -- -watch",
         "cleanup": "rimraf -rf dist coverage"
     },
     "dependencies": {
         "@mse-player/core": "^0.0.1-alpha1",
         "@mse-player/smooth-streaming": "^0.0.1-alpha1",
         "@mse-player/simple-abr": "^0.0.1-alpha1",
-        "@bunch-of-friends/observable": "^1.2.0"
+        "@bunch-of-friends/observable": "^1.4.1"
     },
     "publishConfig": {
         "access": "public"
