@@ -1,18 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "esModuleInterop": true,
-    "declaration": true,
-    "noImplicitAny": true,
-    "preserveConstEnums": true,
-    "removeComments": true,
-    "sourceMap": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitReturns": true,
-    "allowUnreachableCode": false,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "pretty": true,
+
     "target": "es5",
     "lib": [
       "dom",

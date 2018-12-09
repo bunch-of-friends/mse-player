@@ -1,19 +1,36 @@
-import { Session, createPlayer } from '@mse-player/main';
+import { Player, Session, createPlayer, isSupported } from '@mse-player/main';
 
-const player = createPlayer(document.getElementById('video') as HTMLVideoElement);
-wireUpButtons();
-
+let player: Player | null;
 let session: Session | null;
 
-export function wireUpButtons() {
+init();
+
+function init() {
+    if (!isSupported()) {
+        alert('MSE not supported');
+    } else {
+        player = createPlayer(document.getElementById('video') as HTMLVideoElement);
+        wireUpButtons();
+    }
+}
+
+function wireUpButtons() {
     const loadButton = document.getElementById('load') as HTMLButtonElement;
-    loadButton.onclick = function () {
-        session = player.startSession({ url: 'https://www.quirksmode.org/html5/videos/big_buck_bunny.mp4', autoPlay: true, position: 0 });
+    loadButton.onclick = function() {
+        if (!player) {
+            return;
+        }
+
+        session = player.startSession({
+            url: 'http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest',
+            autoPlay: true,
+            position: 0,
+        });
         loadButton.disabled = true;
     };
 
     const stopButton = document.getElementById('stop') as HTMLButtonElement;
-    stopButton.onclick = function () {
+    stopButton.onclick = function() {
         if (!session) {
             return;
         }

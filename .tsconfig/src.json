@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "esModuleInterop": true,
+        "declaration": true,
+        "noImplicitAny": true,
+        "preserveConstEnums": true,
+        "removeComments": true,
+        "sourceMap": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitReturns": true,
+        "allowUnreachableCode": false,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "pretty": true,
+        "composite": true,
+        "noUnusedLocals": false,
+        "skipLibCheck": true,
+        "lib": ["dom", "es2015"]
+    },
+    "exclude": ["node_modules", "dist", "test"]
+}

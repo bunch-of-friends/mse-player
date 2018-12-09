@@ -2,15 +2,19 @@
     "name": "@mse-player/demo-app",
     "version": "0.0.1-alpha1",
     "scripts": {
-        "compile": "webpack",
+        "build": "webpack",
         "cleanup": "rimraf -rf dist coverage",
-        "start": "webpack-dev-server --watch-content-base --open",
-        "lint": "tslint '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**' -p ."
+        "start": "webpack-dev-server --watch-content-base --open"
     },
     "dependencies": {
         "@mse-player/main": "^0.0.1-alpha1"
     },
     "devDependencies": {
+        "@mse-player/core": "^0.0.1-alpha1",
+        "@mse-player/simple-abr": "^0.0.1-alpha1",
+        "@mse-player/smooth-streaming": "^0.0.1-alpha1",
+        "@bunch-of-friends/observable": "^1.2.0",
+
         "clean-webpack-plugin": "^0.1.18",
         "html-webpack-plugin": "^2.30.1",
         "serve": "^6.4.9",

@@ -1,2 +1,3 @@
-export { Player, createPlayer } from './api/player';
-export { Session } from './api/session';
+export * from './api/player';
+export * from './api/session';
+export * from './api/support-check';

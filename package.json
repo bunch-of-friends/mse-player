@@ -1,35 +1,39 @@
 {
-  "name": "mse-player",
-  "version": "0.0.1-alpha",
-  "license": "MIT",
-  "maitainers": [
-    {
-      "name": "David Bohunek",
-      "email": "bohunek@gmail.com"
+    "name": "mse-player",
+    "version": "0.0.1-alpha",
+    "license": "MIT",
+    "maitainers": [
+        {
+            "name": "David Bohunek",
+            "email": "bohunek@gmail.com"
+        }
+    ],
+    "scripts": {
+        "postinstall": "lerna bootstrap",
+        "reset": "npm run cleanup && rimraf -rf node_modules && npm install",
+        "test": "lerna run test",
+        "build": "lerna run build",
+        "build:watch": "lerna run build:watch --stream --no-sort",
+        "cleanup": "lerna run cleanup --stream --parallel",
+        "demo": "npm run build && (cd packages/demo-app && npm run start)",
+        "demo:watch": "npm run demo & npm run build:watch",
+        "lint": "tslint '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**'",
+        "prettier": "prettier --write '**/**/*.{ts,tsx,css}'",
+        "publish": "lerna publish --force-publish=* --skip-npm --skip-git",
+        "prepublish": "npm run build"
+    },
+    "devDependencies": {
+        "@types/jest": "^23.3.10",
+        "jest": "^23.6.0",
+        "lerna": "^3.6.0",
+        "prettier": "^1.15.3",
+        "rimraf": "^2.6.2",
+        "ts-jest": "^23.10.5",
+        "tslint": "^5.11.0",
+        "tslint-config-bunch-of-friends": "^1.0.2",
+        "tslint-config-prettier": "^1.15.0",
+        "tslint-eslint-rules": "^5.4.0",
+        "tslint-plugin-prettier": "^2.0.1",
+        "typescript": "^3.2.2"
     }
-  ],
-  "scripts": {
-    "postinstall": "lerna bootstrap",
-    "reset": "npm run cleanup && rimraf -rf node_modules && npm install",
-    "test": "lerna run test",
-    "build": "npm run cleanup && lerna run compile",
-    "build:watch": "npm run cleanup && lerna run compile:watch --stream",
-    "cleanup": "lerna run cleanup --stream --parallel",
-    "demo": "npm run build && (cd packages/demo-app && npm run start)",
-    "lint": "lerna run lint --parallel",
-    "lint:fix": "npm run lint -- -- -- --fix",
-    "publish": "lerna publish --force-publish=* --skip-npm --skip-git",
-    "prepublish": "npm run build"
-  },
-  "devDependencies": {
-    "@types/jest": "^22.2.2",
-    "jest": "^22.4.3",
-    "lerna": "^2.9.1",
-    "rimraf": "^2.6.2",
-    "ts-jest": "^22.4.2",
-    "tslint": "^5.9.1",
-    "tslint-config-bunch-of-friends": "^1.0.2",
-    "tslint-eslint-rules": "^5.1.0",
-    "typescript": "^2.8.1"
-  }
 }

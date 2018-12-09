@@ -1,0 +1,9 @@
+{
+    "extends": "./src.json",
+    "compilerOptions": {
+        "composite": false,
+        "declaration": false
+    },
+    "include": ["../src"],
+    "types": ["node", "jest"]
+}
