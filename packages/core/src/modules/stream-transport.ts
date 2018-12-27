@@ -16,7 +16,6 @@ export enum AdaptationSetType {
 export interface AdaptationSet {
     type: AdaptationSetType;
     mimeType: string;
-    segmentProvider: SegmentProvider;
     representations: Array<VideoRepresentation> | Array<AudioRepresentation>;
 }
 
@@ -25,6 +24,7 @@ export interface Representation {
 
     codecs: string;
     bitrate: number;
+    segmentProvider: SegmentProvider;
 }
 
 export interface VideoRepresentation extends Representation {
