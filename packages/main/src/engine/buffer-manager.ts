@@ -4,11 +4,14 @@ import { VideoElementWrapper } from './video-element-wrapper';
 export class BufferManager {
     constructor(private logger: Logger, private videoElementWrapper: VideoElementWrapper, private streamDescriptor: StreamDescriptor) {
         this.logger.log('streamDescriptor >> ', this.streamDescriptor);
+        const mediaSource = new MediaSource();
+        this.videoElementWrapper.setSource(URL.createObjectURL(mediaSource));
+        mediaSource.addEventListener('sourceopen', () => {
+            console.log('source open!');
+        });
     }
 
-    public start(positionMs: number): void {
-        // wip
-    }
+    public start(positionMs: number): void {}
 
     public pause(): void {
         // wip
@@ -21,11 +24,6 @@ export class BufferManager {
     public dispose(): void {
         // wip
     }
-
-    // constructor() {
-    //     const mediaSource = new MediaSource();
-    //     videoElement.src = URL.createObjectURL(mediaSource);
-    //     mediaSource.addEventListener('sourceopen', sourceOpen);
 
     //     function sourceOpen(e: any) {
     //         URL.revokeObjectURL(videoElement.src);

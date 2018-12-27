@@ -6,7 +6,11 @@ export class VideoElementWrapper {
     public onError = createObservable(this.errorSubject);
 
     constructor(private videoElement: HTMLVideoElement) {
-        videoElement.addEventListener('error', this.onVideoElementError);
+        this.videoElement.addEventListener('error', this.onVideoElementError);
+    }
+
+    public setSource(sourceUrl: string): void {
+        this.videoElement.src = sourceUrl;
     }
 
     public pause(): void {
