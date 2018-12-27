@@ -1,18 +1,13 @@
 // INFO: this file is a complete throw-away, basicaly a placeholder for a real dependency management implementation
 import { StreamTransport } from '../modules/stream-transport';
 import { Abr } from '../modules/abr';
-import { Logger } from '../logging/logger';
 import { HttpHandler } from '../network/http-handler';
 
-const logger = new Logger();
-const httpHandler = new HttpHandler(logger);
+const httpHandler = new HttpHandler();
 let streamTransport: StreamTransport | null;
 let abr: Abr | null;
 
 export class DependencyContainer {
-    public static getLogger() {
-        return logger;
-    }
 
     public static getHttpHandler() {
         return httpHandler;

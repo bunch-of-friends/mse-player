@@ -1,5 +1,5 @@
-import { createObservable, createSubject, Observable } from '@bunch-of-friends/observable';
-import { Logger, StreamTransport, Abr } from '@mse-player/core';
+import { createSubject } from '@bunch-of-friends/observable';
+import { StreamTransport, Abr } from '@mse-player/core';
 import { SessionState, SessionError, SessionOptions } from '../api/types';
 import { BufferManager } from './buffer-manager';
 import { VideoElementWrapper } from './video-element-wrapper';
@@ -11,7 +11,6 @@ export class SessionController {
 
     constructor(
         private videoElementWrapper: VideoElementWrapper,
-        private logger: Logger,
         private streamTransport: StreamTransport,
         private abr: Abr,
         options: SessionOptions
@@ -19,7 +18,7 @@ export class SessionController {
         this.stateSubject.notifyObservers(SessionState.ManifestLoading);
 
         this.streamTransport.getStreamDescriptor(options.url).then(streamDescriptor => {
-            this.bufferManager = new BufferManager(this.logger, this.videoElementWrapper, streamDescriptor);
+            this.bufferManager = new BufferManager(this.videoElementWrapper, streamDescriptor);
             this.bufferManager.start(options.position);
         });
     }

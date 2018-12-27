@@ -1,9 +1,8 @@
-import { StreamDescriptor, Logger } from '@mse-player/core';
+import { StreamDescriptor } from '@mse-player/core';
 import { VideoElementWrapper } from './video-element-wrapper';
 
 export class BufferManager {
-    constructor(private logger: Logger, private videoElementWrapper: VideoElementWrapper, private streamDescriptor: StreamDescriptor) {
-        this.logger.log('streamDescriptor >> ', this.streamDescriptor);
+    constructor(private videoElementWrapper: VideoElementWrapper, private streamDescriptor: StreamDescriptor) {
         const mediaSource = new MediaSource();
         this.videoElementWrapper.setSource(URL.createObjectURL(mediaSource));
         mediaSource.addEventListener('sourceopen', () => {
