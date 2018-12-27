@@ -1,9 +1,15 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
         "target": "es5",
-        "noImplicitAny": false,
-        "sourceMap": false,
-        "strictNullChecks": true
-    }
+        "module": "commonjs",
+        "declaration": true,
+        "sourceMap": true,
+        "experimentalDecorators": true,
+        "outDir": "dist",
+        "lib": ["es2017", "dom"],
+        "noImplicitAny": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "removeComments": true
+    },
+    "exclude": ["node_modules", "dist"]
 }

@@ -16,19 +16,13 @@ Please visit our Gitter channel https://gitter.im/mse-player/
 
 ## Development
 
+After you clone the repo, simply run `npm install` in the root to install the dependencies and bootstrap lerna.
+
+`npm run dev` will run the demo app and start watching on any changes in the repository and rebuild everything as necessary
+
 ### Key tools
 
 If you are not familiar with these three development tools, it might be difficult to work with this repo.
 - [TypeScript](http://www.typescriptlang.org/)
 - [Lerna](https://lernajs.io/)
 - [Jest](https://facebook.github.io/jest/)
-
-This project is based on the [lerna-typescript-jest-boilerplate](https://github.com/bunch-of-friends/lerna-typescript-jest-boilerplate).
-
-### Scripts
-
-After you clone the repo, simply run `npm install` in the root to install the dependencies and bootstrap lerna.
-Then you can run `npm run demo` which starts the demo application. When you start coding, you might preffer `npm run demo:watch`, which rebuilds the TypeScript code on changes and the demo app as well.
-
-See all the script in the root `package.json`, they are quite self explanatory.
-You should always run the root scripts, you are not intended to run individual scripts in each packages.

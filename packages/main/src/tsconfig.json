@@ -3,5 +3,5 @@
     "compilerOptions": {
         "outDir": "../dist"
     },
-    "references": [{ "path": "../../core/src" }, { "path": "../../abr/simple/src" }, { "path": "../../stream-transport/smooth-streaming/src" }]
+    "references": [{ "path": "../../core/src" }, { "path": "../../abr/simple/src" }, { "path": "../../stream-transport/dash/src" }]
 }

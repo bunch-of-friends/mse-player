@@ -3,8 +3,9 @@ import { Logger } from '../logging/logger';
 export class HttpHandler {
     constructor(private logger: Logger) {}
 
-    public request(input: RequestInfo, init?: RequestInit | undefined): Promise<Response> {
-        this.logger.log('test');
-        return window.fetch(input, init);
+    public async getString(url: string): Promise<string> {
+        return fetch(url).then(response => {
+            return response.text();
+        });
     }
 }

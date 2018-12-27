@@ -1,5 +1,5 @@
-import { Manifest } from '../models/manifest';
+import { StreamDescriptor } from '../models/stream-descriptor';
 
 export interface StreamTransport {
-    getManifest(manifestUrl: string): Promise<Manifest>;
+    getStreamDescriptor(manifestUrl: string): Promise<StreamDescriptor>;
 }

@@ -1,5 +1,5 @@
 export class Logger {
-    public log(message: string) {
-        console.log(message); // tslint:disable-line
+    public log(...args: Array<any>) {
+        console.log(args); // tslint:disable-line
     }
 }

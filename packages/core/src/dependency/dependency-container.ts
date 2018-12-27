@@ -1,5 +1,8 @@
 // INFO: this file is a complete throw-away, basicaly a placeholder for a real dependency management implementation
-import { StreamTransport, Abr, Logger, HttpHandler } from '..';
+import { StreamTransport } from '../modules/stream-transport';
+import { Abr } from '../modules/abr';
+import { Logger } from '../logging/logger';
+import { HttpHandler } from '../network/http-handler';
 
 const logger = new Logger();
 const httpHandler = new HttpHandler(logger);

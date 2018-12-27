@@ -22,7 +22,7 @@ function wireUpButtons() {
         }
 
         session = player.startSession({
-            url: 'http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest',
+            url: 'http://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
             autoPlay: true,
             position: 0,
         });
@@ -52,6 +52,6 @@ function wireUpButtons() {
         if (!session) {
             return;
         }
-        session.play();
+        session.resume();
     };
 }
