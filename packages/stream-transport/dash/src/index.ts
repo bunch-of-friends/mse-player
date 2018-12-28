@@ -46,7 +46,7 @@ class DashSegmentTemplateSegmentProvider implements SegmentProvider {
         }
 
         const segmentDurationMs = 4000;
-        const segmentNumber = Math.ceil(nextSegmentStartTimeMs / segmentDurationMs);
+        const segmentNumber = Math.max(1, Math.ceil(nextSegmentStartTimeMs / segmentDurationMs));
         const isLastSegment = nextSegmentStartTimeMs + segmentDurationMs >= this.assetDurationMs;
         const lengthMs = isLastSegment ? this.assetDurationMs - nextSegmentStartTimeMs : segmentDurationMs;
 
@@ -56,7 +56,7 @@ class DashSegmentTemplateSegmentProvider implements SegmentProvider {
                 return {
                     data,
                     lengthMs,
-                    segmentEndAbsoluteMs: nextSegmentStartTimeMs + lengthMs,
+                    segmentEndTimeMs: nextSegmentStartTimeMs + lengthMs,
                 };
             });
     }

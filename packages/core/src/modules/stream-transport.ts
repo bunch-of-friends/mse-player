@@ -48,11 +48,11 @@ export interface AudioRepresentation extends Representation {
 
 export interface SegmentProvider {
     getInitSegment(): Promise<ArrayBuffer | null>;
-    getNextSegment(nextSegmentStartTime: number): Promise<Segment | null>;
+    getNextSegment(nextSegmentStartTimeMs: number): Promise<Segment | null>;
 }
 
 export interface Segment {
     data: ArrayBuffer;
     lengthMs: number;
-    segmentEndAbsoluteMs: number;
+    segmentEndTimeMs: number;
 }

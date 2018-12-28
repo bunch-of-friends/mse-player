@@ -55,7 +55,7 @@ export class BufferController {
             if (!nextSegment) {
                 return;
             }
-            currentBufferEndMs = nextSegment.segmentEndAbsoluteMs;
+            currentBufferEndMs = nextSegment.segmentEndTimeMs;
         }
     }
 
