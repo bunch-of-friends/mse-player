@@ -1,7 +1,7 @@
 import { SessionOptions, Session } from './types';
 import { SessionController } from '../engine/session-controller';
 
-export function createSession(sessionOptions: SessionOptions, sessionController: SessionController): Session {
+export function createSession(sessionController: SessionController): Session {
     return {
         onError: sessionController.onError,
         pause(): void {
@@ -11,7 +11,7 @@ export function createSession(sessionOptions: SessionOptions, sessionController:
             sessionController.play();
         },
         stop(): Promise<void> {
-            return sessionController.dispose();
+            return sessionController.stop();
         },
     };
 }

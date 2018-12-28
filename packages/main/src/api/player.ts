@@ -13,8 +13,5 @@ export function createPlayer(videoElement: HTMLVideoElement): Player {
         startSession(sessionOptions: SessionOptions): Session {
             return playerController.startSession(sessionOptions);
         },
-        dispose(): Promise<void> {
-            return playerController.dispose();
-        },
     };
 }

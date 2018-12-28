@@ -21,7 +21,9 @@ export class VideoElementWrapper {
         this.videoElement.play();
     }
 
-    public dispose(): void {
+    public stop(): void {
+        this.pause();
+        this.setSource('');
         this.videoElement.removeEventListener('error', this.onVideoElementError);
     }
 
