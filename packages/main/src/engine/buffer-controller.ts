@@ -64,7 +64,7 @@ export class BufferController {
         this.videoElementWrapper.setSource(URL.createObjectURL(mediaSource));
 
         mediaSource.addEventListener('sourceopen', () => {
-            console.log('mediaSource open');
+            console.log('mediaSource open'); // tslint:disable-line
 
             const videoRepresentatons = this.videoAdaptationSet.representations as Array<VideoRepresentation>;
             const mimeCodec = this.videoAdaptationSet.mimeType + ';codecs="' + videoRepresentatons.map(x => x.codecs).join(',') + '"';
@@ -75,16 +75,16 @@ export class BufferController {
             const sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
 
             sourceBuffer.addEventListener('error', () => {
-                console.log('sourceBuffer error');
+                console.log('sourceBuffer error'); // tslint:disable-line
             });
             sourceBuffer.addEventListener('updatstart', () => {
-                console.log('sourceBuffer update start');
+                console.log('sourceBuffer update start'); // tslint:disable-line
             });
             sourceBuffer.addEventListener('update', () => {
-                console.log('sourceBuffer update');
+                console.log('sourceBuffer update'); // tslint:disable-line
             });
             sourceBuffer.addEventListener('updatended', () => {
-                console.log('sourceBuffer update ended');
+                console.log('sourceBuffer update ended'); // tslint:disable-line
             });
 
             this.appendInitSegment(sourceBuffer).then(() => {
@@ -93,11 +93,11 @@ export class BufferController {
         });
 
         mediaSource.addEventListener('sourcended', () => {
-            console.log('mediaSource ended');
+            console.log('mediaSource ended'); // tslint:disable-line
         });
 
         mediaSource.addEventListener('sourceclose', () => {
-            console.log('mediaSource close');
+            console.log('mediaSource close'); // tslint:disable-line
         });
     }
 }
