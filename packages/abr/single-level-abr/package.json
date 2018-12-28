@@ -1,5 +1,5 @@
 {
-    "name": "@mse-player/simple-abr",
+    "name": "@mse-player/single-level-abr",
     "version": "0.0.1-alpha1",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",

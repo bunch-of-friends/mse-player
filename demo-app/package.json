@@ -11,10 +11,6 @@
         "@mse-player/main": "^0.0.1-alpha1"
     },
     "devDependencies": {
-        "@mse-player/core": "^0.0.1-alpha1",
-        "@mse-player/simple-abr": "^0.0.1-alpha1",
-        "@mse-player/dash": "^0.0.1-alpha1",
-        "@bunch-of-friends/observable": "^1.4.1",
         "awesome-typescript-loader": "^5.2.0",
         "css-loader": "^1.0.0",
         "ejs-loader": "^0.3.0",

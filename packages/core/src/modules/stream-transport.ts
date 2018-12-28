@@ -1,5 +1,13 @@
-export interface StreamTransport {
-    getStreamDescriptor(manifestUrl: string): Promise<StreamDescriptor>;
+import { HttpHandler } from './http-handler';
+
+export interface StreamTransportCtr {
+    new (httpHandler: HttpHandler): StreamTransport;
+}
+
+export abstract class StreamTransport {
+    constructor(protected httpHandler: HttpHandler) {}
+
+    public abstract getStreamDescriptor(manifestUrl: string): Promise<StreamDescriptor>;
 }
 
 export interface StreamDescriptor {

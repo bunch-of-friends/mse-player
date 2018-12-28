@@ -41,7 +41,6 @@ export class PlayerController {
         return new SessionController(
             this.videoElementWrapper,
             DependencyContainer.getStreamTransport(),
-            DependencyContainer.getAbr(),
             sessionOptions
         );
     };
