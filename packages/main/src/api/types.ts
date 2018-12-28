@@ -2,7 +2,6 @@ import { Observable } from '@bunch-of-friends/observable';
 
 export interface Player {
     startSession(sessionOptions: SessionOptions): Session;
-    dispose(): Promise<void>;
 }
 
 export interface SessionOptions {

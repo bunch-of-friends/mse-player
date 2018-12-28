@@ -38,10 +38,11 @@ export class SessionController {
         this.videoElementWrapper.play();
     }
 
-    public dispose(): Promise<void> {
-        this.videoElementWrapper.pause();
+    public stop(): Promise<void> {
+        this.videoElementWrapper.stop();
         if (this.bufferManager) {
             this.bufferManager.dispose();
+            this.bufferManager = null;
         }
         return Promise.resolve();
     }
