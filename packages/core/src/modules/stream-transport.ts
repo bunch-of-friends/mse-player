@@ -1,18 +1,18 @@
 import { HttpHandler } from './http-handler';
 
 export interface StreamTransportCtr {
-    new (httpHandler: HttpHandler): StreamTransport;
+    new (manifestUrl: string, httpHandler: HttpHandler): StreamTransport;
 }
 
 export abstract class StreamTransport {
-    constructor(protected httpHandler: HttpHandler) {}
+    constructor(protected manifestUrl: string, protected httpHandler: HttpHandler) {}
 
-    public abstract getStreamDescriptor(manifestUrl: string): Promise<StreamDescriptor>;
+    public abstract getStreamDescriptor(): Promise<StreamDescriptor>;
 }
 
 export interface StreamDescriptor {
     isLive: boolean;
-    durationMs?: number;
+    durationMs: number;
     adaptationSets: Array<AdaptationSet>;
 }
 
@@ -31,22 +31,28 @@ export interface Representation {
     id: string;
 
     codecs: string;
-    bitrate: number;
+    bandwidth: number;
     segmentProvider: SegmentProvider;
 }
 
 export interface VideoRepresentation extends Representation {
-    width: number;
-    height: number;
+    width?: number;
+    height?: number;
     frameRate?: number;
 }
 
 export interface AudioRepresentation extends Representation {
-    channels: number;
-    samplingRate: number;
+    channels?: number;
+    samplingRate?: number;
 }
 
 export interface SegmentProvider {
     getInitSegment(): Promise<ArrayBuffer | null>;
-    getNextSegment(curentTimeMs: number): Promise<ArrayBuffer>;
+    getNextSegment(nextSegmentStartTime: number): Promise<Segment | null>;
+}
+
+export interface Segment {
+    data: ArrayBuffer;
+    lengthMs: number;
+    segmentEndAbsoluteMs: number;
 }

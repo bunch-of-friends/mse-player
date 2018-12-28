@@ -7,4 +7,16 @@ export class HttpHandler {
             return response.text();
         });
     }
+
+    public async getArrayBuffer(url: string): Promise<ArrayBuffer> {
+        return new Promise(resolve => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('get', url);
+            xhr.responseType = 'arraybuffer';
+            xhr.onload = function() {
+                resolve(xhr.response);
+            };
+            xhr.send();
+        });
+    }
 }

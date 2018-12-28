@@ -17,7 +17,7 @@ export class VideoElementWrapper {
         this.videoElement.pause();
     }
 
-    public resume(): void {
+    public play(): void {
         this.videoElement.play();
     }
 

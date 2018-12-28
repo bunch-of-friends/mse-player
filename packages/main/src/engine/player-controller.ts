@@ -38,10 +38,6 @@ export class PlayerController {
             throw 'videoElementWrapper is null';
         }
 
-        return new SessionController(
-            this.videoElementWrapper,
-            DependencyContainer.getStreamTransport(),
-            sessionOptions
-        );
+        return new SessionController(this.videoElementWrapper, DependencyContainer.getStreamTransport(sessionOptions.url), sessionOptions);
     };
 }

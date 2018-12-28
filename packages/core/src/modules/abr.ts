@@ -6,5 +6,5 @@ export interface AbrCtr {
 
 export abstract class Abr {
     constructor(protected streamDescriptor: StreamDescriptor) {}
-    public abstract getNextChunkRepresentation(adapdationSet: AdaptationSet): Representation;
+    public abstract getNextSegmentRepresentation(adapdationSet: AdaptationSet): Representation;
 }

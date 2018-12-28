@@ -1,23 +1,24 @@
 import { createSubject } from '@bunch-of-friends/observable';
 import { StreamTransport, Abr, DependencyContainer } from '@mse-player/core';
 import { SessionState, SessionError, SessionOptions } from '../api/types';
-import { BufferManager } from './buffer-manager';
+import { BufferController } from './buffer-controller';
 import { VideoElementWrapper } from './video-element-wrapper';
 
 export class SessionController {
-    private bufferManager: BufferManager | null;
-    private abr: Abr | null;
+    private bufferManager: BufferController | null;
     private stateSubject = createSubject<SessionState>({ initialState: SessionState.Created });
     public onError = this.videoElementWrapper.onError;
 
     constructor(private videoElementWrapper: VideoElementWrapper, private streamTransport: StreamTransport, options: SessionOptions) {
         this.stateSubject.notifyObservers(SessionState.ManifestLoading);
 
-        this.streamTransport.getStreamDescriptor(options.url).then(streamDescriptor => {
-            this.abr = DependencyContainer.getAbr(streamDescriptor);
-
-            this.bufferManager = new BufferManager(this.videoElementWrapper, streamDescriptor);
-            this.bufferManager.start(options.position);
+        this.streamTransport.getStreamDescriptor().then(streamDescriptor => {
+            const abr = DependencyContainer.getAbr(streamDescriptor);
+            this.bufferManager = new BufferController(this.videoElementWrapper, streamDescriptor, abr);
+            this.bufferManager.setStartingPosition(options.position);
+            if (options.autoPlay) {
+                this.play();
+            }
         });
     }
 
@@ -29,12 +30,12 @@ export class SessionController {
         this.videoElementWrapper.pause();
     }
 
-    public resume(): void {
+    public play(): void {
         if (!this.bufferManager) {
             return;
         }
-        this.bufferManager.resume();
-        this.videoElementWrapper.resume();
+        this.bufferManager.play();
+        this.videoElementWrapper.play();
     }
 
     public dispose(): Promise<void> {

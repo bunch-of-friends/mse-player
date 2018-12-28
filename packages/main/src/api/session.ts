@@ -8,7 +8,7 @@ export function createSession(sessionOptions: SessionOptions, sessionController:
             sessionController.pause();
         },
         resume(): void {
-            sessionController.resume();
+            sessionController.play();
         },
         stop(): Promise<void> {
             return sessionController.dispose();
