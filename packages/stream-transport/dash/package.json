@@ -9,11 +9,7 @@
         "cleanup": "rimraf -rf dist coverage"
     },
     "dependencies": {
-        "@mse-player/core": "^0.0.1-alpha1",
-        "mpd-parser": "^0.7.0"
-    },
-    "devDependencies": {
-        "@types/mpd-parser": "^0.0.1-alpha1"
+        "@mse-player/core": "^0.0.1-alpha1"
     },
     "publishConfig": {
         "access": "public"
