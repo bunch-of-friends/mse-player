@@ -14,7 +14,7 @@ export class TemplateSegmentProvider implements SegmentProvider {
         }
 
         const segmentDuration = 4;
-        const segmentNumber = Math.max(1, Math.ceil(nextSegmentStartTime / segmentDuration));
+        const segmentNumber = Math.ceil(nextSegmentStartTime / segmentDuration) + 1;
         const isLastSegment = nextSegmentStartTime + segmentDuration >= this.assetDuration;
         const length = isLastSegment ? this.assetDuration - nextSegmentStartTime : segmentDuration;
 

@@ -1,17 +1,36 @@
 import { createObservable, createSubject } from '@bunch-of-friends/observable';
 import { SessionPosition } from '../api/session';
 import { ErrorEmitter, InternalError, InternalErrorSeverity } from './session-error-manager';
+import { MediaState } from './session-state-manager';
 
 export class VideoElementWrapper {
     private errorEmitter: VideoElementErrorEmitter;
     private positionUpdateSubject = createSubject<SessionPosition>();
+    private mediaStateSubject = createSubject<MediaState>();
     public onPositionUpdate = createObservable(this.positionUpdateSubject);
+    public onMediaStateChanged = createObservable(this.mediaStateSubject);
 
     constructor(private videoElement: HTMLVideoElement) {
         this.errorEmitter = new VideoElementErrorEmitter(videoElement);
 
         this.videoElement.ontimeupdate = () => {
             this.positionUpdateSubject.notifyObservers({ currentTime: this.videoElement.currentTime });
+        };
+
+        this.videoElement.onplaying = () => {
+            this.mediaStateSubject.notifyObservers(MediaState.Playing);
+        };
+
+        this.videoElement.onpause = () => {
+            this.mediaStateSubject.notifyObservers(MediaState.Paused);
+        };
+
+        this.videoElement.onseeking = () => {
+            this.mediaStateSubject.notifyObservers(MediaState.Seeking);
+        };
+
+        this.videoElement.onwaiting = () => {
+            this.mediaStateSubject.notifyObservers(MediaState.Stalled);
         };
     }
 
@@ -32,6 +51,13 @@ export class VideoElementWrapper {
     }
 
     public stop(): Promise<void> {
+        this.videoElement.ontimeupdate = null;
+        this.videoElement.onplaying = null;
+        this.videoElement.onpause = null;
+        this.videoElement.onplaying = null;
+        this.videoElement.onseeking = null;
+        this.videoElement.onwaiting = null;
+
         return new Promise(resolve => {
             const observer = this.positionUpdateSubject.registerObserver(() => {
                 if (this.videoElement.currentTime === 0) {

@@ -51,5 +51,6 @@ export enum SessionState {
     Playing,
     Paused,
     Stalled,
-    Stopped,
+    Seeking,
+    Ended,
 }

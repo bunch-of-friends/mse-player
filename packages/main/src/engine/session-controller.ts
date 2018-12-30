@@ -7,7 +7,7 @@ import { SessionStateManager } from './session-state-manager';
 
 export class SessionController {
     private errorManager = new SessionErrorManager();
-    private stateManager = new SessionStateManager();
+    private stateManager = new SessionStateManager(this.videoElementWrapper);
     private bufferController: BufferController | null;
 
     public onError = this.errorManager.onError;
