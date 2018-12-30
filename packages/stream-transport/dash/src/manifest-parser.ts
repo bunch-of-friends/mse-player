@@ -1,12 +1,12 @@
 import { StreamDescriptor, AdaptationSetType, HttpHandler } from '@mse-player/core';
-import { DashSegmentTemplateSegmentProvider } from './dash-segment-template-segment-provider';
+import { TemplateSegmentProvider } from './template-segment-provider';
 
 const iso8601DurationRegex = /P(?:([0-9]+)Y)?(?:([0-9]+)M)?(?:([0-9]+)D)?T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+(?:\.[0-9]+)?)?S)?/;
 
 export class ManifestParser {
     private defaultStreamDescriptor = {
         isLive: false,
-        durationMs: 634566,
+        duration: 634.566,
         adaptationSets: [
             {
                 type: AdaptationSetType.Video,
@@ -16,7 +16,7 @@ export class ManifestParser {
                         codecs: 'avc1.640028',
                         id: 'bbb_30fps_1920x1080_8000k',
                         bandwidth: 9914554,
-                        segmentProvider: new DashSegmentTemplateSegmentProvider(634566, this.httpHandler),
+                        segmentProvider: new TemplateSegmentProvider(634.566, this.httpHandler),
                     },
                 ],
             },
@@ -35,21 +35,21 @@ export class ManifestParser {
 
         const isLive = mpdNode.getAttribute('type') === 'dynamic';
         const durationAttribute = mpdNode.getAttribute('mediaPresentationDuration');
-        let durationMs: number;
+        let duration: number;
         if (!durationAttribute) {
-            durationMs = 0;
+            duration = 0;
         } else {
-            durationMs = this.getSecondsFromManifestTimeValue(durationAttribute) * 1000;
+            duration = this.getSecondsFromManifestTimeValue(durationAttribute);
         }
 
         console.log(mpdNode); // tslint:disable-line no-console
         console.log(`isLive: ${isLive}`); // tslint:disable-line no-console
-        console.log(`durationMs: ${durationMs}`); // tslint:disable-line no-console
+        console.log(`duration: ${duration}`); // tslint:disable-line no-console
 
         return {
             ...this.defaultStreamDescriptor,
             isLive,
-            durationMs,
+            duration,
         };
     }
 

@@ -1,12 +1,22 @@
 import { createObservable, createSubject } from '@bunch-of-friends/observable';
-import { SessionError } from '../api/types';
+import { SessionPosition } from '../api/session';
+import { ErrorEmitter, InternalError, InternalErrorSeverity } from './session-error-manager';
 
 export class VideoElementWrapper {
-    private errorSubject = createSubject<SessionError>();
-    public onError = createObservable(this.errorSubject);
+    private errorEmitter: VideoElementErrorEmitter;
+    private positionUpdateSubject = createSubject<SessionPosition>();
+    public onPositionUpdate = createObservable(this.positionUpdateSubject);
 
     constructor(private videoElement: HTMLVideoElement) {
-        this.videoElement.addEventListener('error', this.onVideoElementError);
+        this.errorEmitter = new VideoElementErrorEmitter(videoElement);
+
+        this.videoElement.ontimeupdate = () => {
+            this.positionUpdateSubject.notifyObservers({ currentTime: this.videoElement.currentTime });
+        };
+    }
+
+    public getErrorEmitter(): ErrorEmitter {
+        return this.errorEmitter;
     }
 
     public setSource(sourceUrl: string): void {
@@ -17,17 +27,43 @@ export class VideoElementWrapper {
         this.videoElement.pause();
     }
 
-    public play(): void {
-        this.videoElement.play();
+    public play(): Promise<void> {
+        return this.videoElement.play();
     }
 
-    public stop(): void {
-        this.pause();
-        this.setSource('');
+    public stop(): Promise<void> {
+        return new Promise(resolve => {
+            const observer = this.positionUpdateSubject.registerObserver(() => {
+                if (this.videoElement.currentTime === 0) {
+                    this.positionUpdateSubject.unregisterObserver(observer);
+                    resolve();
+                }
+            }, this);
+            this.pause();
+            this.setSource('');
+        });
+    }
+
+    public dispose(): void {
+        this.errorEmitter.dispose();
+    }
+}
+
+class VideoElementErrorEmitter implements ErrorEmitter {
+    private errorSubject = createSubject<InternalError>();
+
+    public onError = createObservable(this.errorSubject);
+    public name: 'videoElement';
+
+    constructor(private videoElement: HTMLVideoElement) {
+        this.videoElement.addEventListener('error', this.onVideoElementError);
+    }
+
+    public dispose(): void {
         this.videoElement.removeEventListener('error', this.onVideoElementError);
     }
 
     private onVideoElementError = (): void => {
-        this.errorSubject.notifyObservers({ source: 'videoElement', errorObject: this.videoElement.error });
+        this.errorSubject.notifyObservers({ error: this.videoElement.error, severity: InternalErrorSeverity.Error });
     };
 }

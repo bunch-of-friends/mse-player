@@ -13,8 +13,8 @@ export class BufferController {
         }
     }
 
-    public setStartingPosition(positionMs: number): void {
-        this.initialiseSource(positionMs);
+    public startFillingBuffer(startingPositionMs: number): void {
+        this.initialiseSource(startingPositionMs, this.streamDescriptor.duration);
     }
 
     public pause(): void {
@@ -48,23 +48,27 @@ export class BufferController {
         });
     }
 
-    private async appendAllSegments(startingPositionMs: number, durationMs: number, sourceBuffer: SourceBuffer): Promise<void> {
-        let currentBufferEndMs = startingPositionMs;
-        while (currentBufferEndMs <= durationMs) {
-            const nextSegment = await this.appendNextSegment(currentBufferEndMs, sourceBuffer);
+    private async appendAllSegments(startingPosition: number, durationMs: number, sourceBuffer: SourceBuffer): Promise<void> {
+        let currentBufferEnd = startingPosition;
+        while (currentBufferEnd <= durationMs) {
+            const nextSegment = await this.appendNextSegment(currentBufferEnd, sourceBuffer);
             if (!nextSegment) {
                 return;
             }
-            currentBufferEndMs = nextSegment.segmentEndTimeMs;
+            currentBufferEnd = nextSegment.segmentEndTime;
         }
     }
 
-    private initialiseSource(positionMs: number) {
+    private initialiseSource(positionMs: number, duration: number) {
         const mediaSource = new MediaSource();
+
         this.videoElementWrapper.setSource(URL.createObjectURL(mediaSource));
 
         mediaSource.addEventListener('sourceopen', () => {
             console.log('mediaSource open'); // tslint:disable-line
+
+            mediaSource.duration = duration;
+            (window as any).m = mediaSource;
 
             const videoRepresentatons = this.videoAdaptationSet.representations as Array<VideoRepresentation>;
             const mimeCodec = this.videoAdaptationSet.mimeType + ';codecs="' + videoRepresentatons.map(x => x.codecs).join(',') + '"';
@@ -73,6 +77,7 @@ export class BufferController {
             }
 
             const sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
+            (window as any).s = sourceBuffer;
 
             sourceBuffer.addEventListener('error', () => {
                 console.log('sourceBuffer error'); // tslint:disable-line
@@ -88,7 +93,7 @@ export class BufferController {
             });
 
             this.appendInitSegment(sourceBuffer).then(() => {
-                this.appendAllSegments(positionMs, this.streamDescriptor.durationMs, sourceBuffer);
+                this.appendAllSegments(positionMs, this.streamDescriptor.duration, sourceBuffer);
             });
         });
 

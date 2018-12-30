@@ -1,5 +1,5 @@
 import { createSession } from '../api/session';
-import { Session, SessionOptions } from '../api/types';
+import { Session, SessionOptions } from '../api/session';
 import { SessionController } from './session-controller';
 import { VideoElementWrapper } from './video-element-wrapper';
 import { DependencyContainer } from '@mse-player/core';
@@ -12,6 +12,7 @@ export class PlayerController {
 
     public startSession(sessionOptions: SessionOptions): Session {
         const sessionController = this.sessionControllerFactory(sessionOptions);
+        sessionController.load(sessionOptions);
         return createSession(sessionController);
     }
 
@@ -20,6 +21,6 @@ export class PlayerController {
             throw 'videoElementWrapper is null';
         }
 
-        return new SessionController(this.videoElementWrapper, DependencyContainer.getStreamTransport(sessionOptions.url), sessionOptions);
+        return new SessionController(this.videoElementWrapper, DependencyContainer.getStreamTransport(sessionOptions.url));
     };
 }

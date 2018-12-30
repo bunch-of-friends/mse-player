@@ -1,49 +1,59 @@
-import { createSubject } from '@bunch-of-friends/observable';
 import { StreamTransport, Abr, DependencyContainer } from '@mse-player/core';
-import { SessionState, SessionError, SessionOptions } from '../api/types';
+import { SessionOptions } from '../api/session';
 import { BufferController } from './buffer-controller';
 import { VideoElementWrapper } from './video-element-wrapper';
+import { SessionErrorManager } from './session-error-manager';
+import { SessionStateManager } from './session-state-manager';
 
 export class SessionController {
-    private bufferManager: BufferController | null;
-    private stateSubject = createSubject<SessionState>({ initialState: SessionState.Created });
-    public onError = this.videoElementWrapper.onError;
+    private errorManager = new SessionErrorManager();
+    private stateManager = new SessionStateManager();
+    private bufferController: BufferController | null;
 
-    constructor(private videoElementWrapper: VideoElementWrapper, private streamTransport: StreamTransport, options: SessionOptions) {
-        this.stateSubject.notifyObservers(SessionState.ManifestLoading);
+    public onError = this.errorManager.onError;
+    public onStateChanged = this.stateManager.onStateChanged;
+    public onPositionUpdate = this.videoElementWrapper.onPositionUpdate;
 
-        this.streamTransport.getStreamDescriptor().then(streamDescriptor => {
-            const abr = DependencyContainer.getAbr(streamDescriptor);
-            this.bufferManager = new BufferController(this.videoElementWrapper, streamDescriptor, abr);
-            this.bufferManager.setStartingPosition(options.position);
-            if (options.autoPlay) {
-                this.play();
-            }
+    constructor(private videoElementWrapper: VideoElementWrapper, private streamTransport: StreamTransport) {
+        this.errorManager.registerErrorEmitter(videoElementWrapper.getErrorEmitter());
+    }
+
+    public async load(options: SessionOptions): Promise<void> {
+        const streamDescriptor = await this.stateManager.decorateLoadManifest(() => this.streamTransport.getStreamDescriptor());
+
+        const abr = DependencyContainer.getAbr(streamDescriptor);
+        const bufferController = new BufferController(this.videoElementWrapper, streamDescriptor, abr);
+        this.bufferController = bufferController;
+
+        return this.stateManager.decorateInitialBuffering(() => {
+            bufferController.startFillingBuffer(options.startingPosition);
+            return this.play();
         });
     }
 
     public pause(): void {
-        if (!this.bufferManager) {
+        if (!this.bufferController) {
             return;
         }
-        this.bufferManager.pause();
+        this.bufferController.pause();
         this.videoElementWrapper.pause();
     }
 
-    public play(): void {
-        if (!this.bufferManager) {
-            return;
+    public play(): Promise<void> {
+        if (!this.bufferController) {
+            return Promise.reject('invalid state: buffer manager not set');
         }
-        this.bufferManager.play();
-        this.videoElementWrapper.play();
+        this.bufferController.play();
+        return this.videoElementWrapper.play();
     }
 
     public stop(): Promise<void> {
-        this.videoElementWrapper.stop();
-        if (this.bufferManager) {
-            this.bufferManager.dispose();
-            this.bufferManager = null;
+        if (this.bufferController) {
+            this.bufferController.dispose();
+            this.bufferController = null;
         }
-        return Promise.resolve();
+        this.errorManager.dispose();
+
+        return this.videoElementWrapper.stop();
     }
 }

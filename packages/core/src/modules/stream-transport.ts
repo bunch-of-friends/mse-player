@@ -12,7 +12,7 @@ export abstract class StreamTransport {
 
 export interface StreamDescriptor {
     isLive: boolean;
-    durationMs: number;
+    duration: number;
     adaptationSets: Array<AdaptationSet>;
 }
 
@@ -48,11 +48,11 @@ export interface AudioRepresentation extends Representation {
 
 export interface SegmentProvider {
     getInitSegment(): Promise<ArrayBuffer | null>;
-    getNextSegment(nextSegmentStartTimeMs: number): Promise<Segment | null>;
+    getNextSegment(nextSegmentStartTime: number): Promise<Segment | null>;
 }
 
 export interface Segment {
     data: ArrayBuffer;
-    lengthMs: number;
-    segmentEndTimeMs: number;
+    length: number;
+    segmentEndTime: number;
 }
