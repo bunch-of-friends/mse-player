@@ -26,25 +26,40 @@ export class ManifestParser {
     constructor(private httpHandler: HttpHandler) {}
 
     public getStreamDescriptor(xml: Document): ManifestAquisition {
-        console.log('THIS IS OUR DOCUMENT:', xml); // tslint:disable-line no-console
-        const mpdResult = this.evaluateXml('//MPD', xml);
-        const mpdNode = mpdResult.iterateNext() as Element;
-        if (!mpdNode) {
-            return { isSuccess: true, streamDescriptor: this.defaultStreamDescriptor };
-        }
+        const xmlns = this.getNamespace(xml);
+        const typeExpression = '*/@type';
+        const durationExpression = '*/@mediaPresentationDuration';
+        const periodExpression = '//xmlns:Period';
 
-        const isLive = mpdNode.getAttribute('type') === 'dynamic';
-        const durationAttribute = mpdNode.getAttribute('mediaPresentationDuration');
-        let duration: number;
-        if (!durationAttribute) {
-            duration = 0;
-        } else {
-            duration = this.getSecondsFromManifestTimeValue(durationAttribute);
-        }
+        const mpdResult = xml.evaluate(
+            this.concatenateXpathExpressions(typeExpression, durationExpression, periodExpression),
+            xml,
+            prefix => {
+                // tslint:enable
+                switch (prefix) {
+                    case 'xmlns':
+                        return xmlns;
+                    default:
+                        return null;
+                }
+            },
+            XPathResult.ANY_TYPE,
+            null
+        );
 
-        console.log(mpdNode); // tslint:disable-line no-console
-        console.log(`isLive: ${isLive}`); // tslint:disable-line no-console
-        console.log(`duration: ${duration}`); // tslint:disable-line no-console
+        const mpdTypeNode = mpdResult.iterateNext();
+        const mpdDurationNode = mpdResult.iterateNext();
+        const periodNode = mpdResult.iterateNext();
+
+        const isLive = (mpdTypeNode && mpdTypeNode.nodeValue) === 'dynamic';
+        const duration = (mpdDurationNode && mpdDurationNode.nodeValue && this.getSecondsFromManifestTimeValue(mpdDurationNode.nodeValue)) || 0;
+        // tslint:disable no-console
+        console.log('!!!!!!!!!!!!!!! LOOK BELOW !!!!!!!!!!!!!!!');
+        console.log('isLive', isLive);
+        console.log('duration', duration);
+        console.log('period node', periodNode);
+        console.log('!!!!!!!!!!!!!!! LOOK ABOVE !!!!!!!!!!!!!!!');
+        // tslint:enable
 
         const streamDescriptor = {
             ...this.defaultStreamDescriptor,
@@ -58,8 +73,16 @@ export class ManifestParser {
         };
     }
 
-    private evaluateXml(expression: string, xml: Document) {
-        return xml.evaluate(expression, xml, null, XPathResult.ANY_TYPE, null);
+    private concatenateXpathExpressions(...expressions: Array<string>): string {
+        return `/${expressions.join('|')}`;
+    }
+
+    private getNamespace(xml: Document): string | null {
+        const firstElement = xml.firstElementChild;
+        if (!firstElement) {
+            return null;
+        }
+        return firstElement.namespaceURI;
     }
 
     private getSecondsFromManifestTimeValue(time: string): number {
