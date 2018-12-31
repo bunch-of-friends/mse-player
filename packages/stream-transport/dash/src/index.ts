@@ -10,7 +10,7 @@ export class DashStreamTransport extends StreamTransport {
             return {
                 isSuccess: false,
                 error: {
-                    payload: 'not yo momma',
+                    payload: 'unknown error',
                 },
             };
         }
