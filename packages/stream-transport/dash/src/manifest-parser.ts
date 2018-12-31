@@ -25,8 +25,8 @@ export class ManifestParser {
 
     constructor(private httpHandler: HttpHandler) {}
 
-    public getStreamDescriptor(xmlString: string): ManifestAquisition {
-        const xml = new DOMParser().parseFromString(xmlString, 'text/html');
+    public getStreamDescriptor(xml: Document): ManifestAquisition {
+        console.log('THIS IS OUR DOCUMENT:', xml); // tslint:disable-line no-console
         const mpdResult = this.evaluateXml('//MPD', xml);
         const mpdNode = mpdResult.iterateNext() as Element;
         if (!mpdNode) {
