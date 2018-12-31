@@ -1,14 +1,14 @@
 import { createObservable, createSubject } from '@bunch-of-friends/observable';
 import { SessionPosition } from '../api/session';
-import { ErrorEmitter, InternalError, InternalErrorSeverity } from './session-error-manager';
+import { ErrorEmitter } from './session-error-manager';
 import { MediaState } from './session-state-manager';
 
 export class VideoElementWrapper {
-    private errorEmitter: VideoElementErrorEmitter;
-    private positionUpdateSubject = createSubject<SessionPosition>();
-    private mediaStateSubject = createSubject<MediaState>();
-    public onPositionUpdate = createObservable(this.positionUpdateSubject);
-    public onMediaStateChanged = createObservable(this.mediaStateSubject);
+    private readonly errorEmitter: VideoElementErrorEmitter;
+    private readonly positionUpdateSubject = createSubject<SessionPosition>();
+    private readonly mediaStateSubject = createSubject<MediaState>();
+    public readonly onPositionUpdate = createObservable(this.positionUpdateSubject);
+    public readonly onMediaStateChanged = createObservable(this.mediaStateSubject);
 
     constructor(private videoElement: HTMLVideoElement) {
         this.errorEmitter = new VideoElementErrorEmitter(videoElement);
@@ -51,20 +51,24 @@ export class VideoElementWrapper {
     }
 
     public stop(): Promise<void> {
-        this.videoElement.ontimeupdate = null;
-        this.videoElement.onplaying = null;
-        this.videoElement.onpause = null;
-        this.videoElement.onplaying = null;
-        this.videoElement.onseeking = null;
-        this.videoElement.onwaiting = null;
+        const onStopped = () => {
+            this.videoElement.ontimeupdate = null;
+            this.videoElement.onplaying = null;
+            this.videoElement.onpause = null;
+            this.videoElement.onplaying = null;
+            this.videoElement.onseeking = null;
+            this.videoElement.onwaiting = null;
+        };
 
         return new Promise(resolve => {
             const observer = this.positionUpdateSubject.registerObserver(() => {
                 if (this.videoElement.currentTime === 0) {
                     this.positionUpdateSubject.unregisterObserver(observer);
+                    onStopped();
                     resolve();
                 }
             }, this);
+
             this.pause();
             this.setSource('');
         });
@@ -75,13 +79,11 @@ export class VideoElementWrapper {
     }
 }
 
-class VideoElementErrorEmitter implements ErrorEmitter {
-    private errorSubject = createSubject<InternalError>();
-
-    public onError = createObservable(this.errorSubject);
+class VideoElementErrorEmitter extends ErrorEmitter {
     public name: 'videoElement';
 
     constructor(private videoElement: HTMLVideoElement) {
+        super();
         this.videoElement.addEventListener('error', this.onVideoElementError);
     }
 
@@ -90,6 +92,6 @@ class VideoElementErrorEmitter implements ErrorEmitter {
     }
 
     private onVideoElementError = (): void => {
-        this.errorSubject.notifyObservers({ error: this.videoElement.error, severity: InternalErrorSeverity.Error });
+        this.errorSubject.notifyObservers({ payload: this.videoElement.error });
     };
 }

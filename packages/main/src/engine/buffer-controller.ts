@@ -1,19 +1,34 @@
-import { StreamDescriptor, Abr, AdaptationSetType, AdaptationSet, VideoRepresentation, Segment } from '@mse-player/core';
+import {
+    StreamDescriptor,
+    Abr,
+    AdaptationSetType,
+    AdaptationSet,
+    VideoRepresentation,
+    Segment,
+    InternalError,
+    SegmentAquisition,
+} from '@mse-player/core';
 import { VideoElementWrapper } from './video-element-wrapper';
+import { ErrorEmitter } from './session-error-manager';
 
 export class BufferController {
     private readonly videoAdaptationSet: AdaptationSet;
     private readonly streamDescriptor: StreamDescriptor;
+    private readonly errorEmitter = new BufferErrorEmitter();
+    private isInErrorState = false;
 
     constructor(private videoElementWrapper: VideoElementWrapper, streamDescriptor: StreamDescriptor, private abr: Abr) {
         this.streamDescriptor = streamDescriptor;
         this.videoAdaptationSet = this.streamDescriptor.adaptationSets.filter(x => x.type === AdaptationSetType.Video)[0];
         if (!this.videoAdaptationSet) {
-            throw 'no video adaptation sets found';
+            this.notifyError({ payload: 'no video adaptation sets found' });
         }
     }
 
     public startFillingBuffer(startingPositionMs: number): void {
+        if (this.isInErrorState) {
+            return;
+        }
         this.initialiseSource(startingPositionMs, this.streamDescriptor.duration);
     }
 
@@ -29,23 +44,46 @@ export class BufferController {
         // wip
     }
 
-    private appendInitSegment(sourceBuffer: SourceBuffer): Promise<void> {
+    private async appendInitSegment(sourceBuffer: SourceBuffer): Promise<void> {
         const representation = this.abr.getNextSegmentRepresentation(this.videoAdaptationSet);
-        return representation.segmentProvider.getInitSegment().then(bytes => {
-            if (bytes !== null) {
-                sourceBuffer.appendBuffer(bytes);
-            }
-        });
+        const segmentAquisition = await representation.segmentProvider.getInitSegment();
+
+        if (segmentAquisition.isNotAvailable) {
+            return;
+        }
+
+        if (segmentAquisition.isError && segmentAquisition.error) {
+            this.notifyError(segmentAquisition.error);
+            return;
+        }
+
+        if (segmentAquisition.isSuccess && segmentAquisition.segment) {
+            sourceBuffer.appendBuffer(segmentAquisition.segment.data);
+            return;
+        }
+
+        throw 'init segment - didnt expect to get here';
     }
 
-    private appendNextSegment(nextSegmentStartPositionMs: number, sourceBuffer: SourceBuffer): Promise<Segment | null> {
+    private async appendNextSegment(nextSegmentStartPositionMs: number, sourceBuffer: SourceBuffer): Promise<Segment | null> {
         const representation = this.abr.getNextSegmentRepresentation(this.videoAdaptationSet);
-        return representation.segmentProvider.getNextSegment(nextSegmentStartPositionMs).then(segment => {
-            if (segment !== null) {
-                sourceBuffer.appendBuffer(segment.data);
-            }
-            return segment;
-        });
+        const segmentAquisition = await representation.segmentProvider.getNextSegment(nextSegmentStartPositionMs);
+
+        if (segmentAquisition.isNotAvailable) {
+            return null;
+        }
+
+        if (segmentAquisition.isError && segmentAquisition.error) {
+            this.notifyError(segmentAquisition.error);
+            return null;
+        }
+
+        if (segmentAquisition.isSuccess && segmentAquisition.segment) {
+            sourceBuffer.appendBuffer(segmentAquisition.segment.data);
+            return segmentAquisition.segment;
+        }
+
+        throw 'segment - didnt expect to get here';
     }
 
     private async appendAllSegments(startingPosition: number, durationMs: number, sourceBuffer: SourceBuffer): Promise<void> {
@@ -104,5 +142,17 @@ export class BufferController {
         mediaSource.addEventListener('sourceclose', () => {
             console.log('mediaSource close'); // tslint:disable-line
         });
+    }
+
+    private notifyError(error: InternalError) {
+        this.errorEmitter.notifyError(error);
+        this.isInErrorState = true;
+    }
+}
+
+class BufferErrorEmitter extends ErrorEmitter {
+    public name: 'bufferController';
+    public notifyError(error: InternalError) {
+        this.errorSubject.notifyObservers(error);
     }
 }

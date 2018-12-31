@@ -1,21 +1,17 @@
-import { createObservable, createSubject, Observable } from '@bunch-of-friends/observable';
+import { InternalError } from '@mse-player/core';
+import { createObservable, createSubject } from '@bunch-of-friends/observable';
 import { SessionError } from '../api/session';
 
 export class SessionErrorManager {
-    private errorEmitters = new Array<ErrorEmitter>();
-    private errorSubject = createSubject<SessionError>();
-    public onError = createObservable(this.errorSubject);
+    private readonly errorEmitters = new Array<ErrorEmitter>();
+    private readonly errorSubject = createSubject<SessionError>();
+    public readonly onError = createObservable(this.errorSubject);
 
     public registerErrorEmitter(errorEmitter: ErrorEmitter) {
         errorEmitter.onError.register(error => {
-            if (error.severity !== InternalErrorSeverity.Error) {
-                console.log('WARNING >> ', error); //tslint:disable-line
-                return;
-            }
-
             this.errorSubject.notifyObservers({
                 source: errorEmitter.name,
-                error: error.error,
+                payload: error.payload,
             });
         });
         this.errorEmitters.push(errorEmitter);
@@ -23,22 +19,14 @@ export class SessionErrorManager {
 
     public dispose() {
         this.errorEmitters.forEach(x => x.onError.unregisterAllObservers());
-        this.errorEmitters = [];
+        this.errorEmitters.length = 0;
         this.onError.unregisterAllObservers();
     }
 }
 
-export interface ErrorEmitter {
-    name: string;
-    onError: Observable<InternalError>;
-}
+export abstract class ErrorEmitter {
+    protected readonly errorSubject = createSubject<InternalError>();
 
-export interface InternalError {
-    error: Object | string | null;
-    severity: InternalErrorSeverity;
-}
-
-export enum InternalErrorSeverity {
-    Warning,
-    Error,
+    public readonly onError = createObservable(this.errorSubject);
+    public abstract readonly name: string;
 }

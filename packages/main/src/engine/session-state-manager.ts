@@ -1,11 +1,11 @@
 import { createSubject, createObservable, Observable } from '@bunch-of-friends/observable';
 import { SessionState } from '../api/session';
-import { StreamDescriptor } from '@mse-player/core';
+import { StreamDescriptor, ManifestAquisition } from '@mse-player/core';
 import { VideoElementWrapper } from './video-element-wrapper';
 
 export class SessionStateManager {
-    private stateSubject = createSubject<SessionState>({ initialState: SessionState.Created });
-    public onStateChanged = createObservable(this.stateSubject);
+    private readonly stateSubject = createSubject<SessionState>({ initialState: SessionState.Created });
+    public readonly onStateChanged = createObservable(this.stateSubject);
 
     constructor(private videoElementWrapper: VideoElementWrapper) {
         this.stateSubject.notifyObservers(SessionState.Created);
@@ -33,7 +33,7 @@ export class SessionStateManager {
         });
     }
 
-    public async decorateLoadManifest(loadManifestFn: () => Promise<StreamDescriptor>): Promise<StreamDescriptor> {
+    public async decorateLoadManifest(loadManifestFn: () => Promise<ManifestAquisition>): Promise<ManifestAquisition> {
         return this.executeStateChange(SessionState.ManifestLoadingStarted, SessionState.ManifestLoaded, loadManifestFn);
     }
 

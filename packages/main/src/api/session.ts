@@ -35,7 +35,7 @@ export interface Session {
 
 export interface SessionError {
     source: string;
-    error?: Object | string | null;
+    payload?: Object | string | null;
 }
 
 export interface SessionPosition {

@@ -1,4 +1,4 @@
-import { StreamDescriptor, AdaptationSetType, HttpHandler } from '@mse-player/core';
+import { ManifestAquisition, AdaptationSetType, HttpHandler } from '@mse-player/core';
 import { TemplateSegmentProvider } from './template-segment-provider';
 
 const iso8601DurationRegex = /P(?:([0-9]+)Y)?(?:([0-9]+)M)?(?:([0-9]+)D)?T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+(?:\.[0-9]+)?)?S)?/;
@@ -25,12 +25,12 @@ export class ManifestParser {
 
     constructor(private httpHandler: HttpHandler) {}
 
-    public getStreamDescriptor(xmlString: string): StreamDescriptor {
+    public getStreamDescriptor(xmlString: string): ManifestAquisition {
         const xml = new DOMParser().parseFromString(xmlString, 'text/html');
         const mpdResult = this.evaluateXml('//MPD', xml);
         const mpdNode = mpdResult.iterateNext() as Element;
         if (!mpdNode) {
-            return this.defaultStreamDescriptor;
+            return { isSuccess: true, streamDescriptor: this.defaultStreamDescriptor };
         }
 
         const isLive = mpdNode.getAttribute('type') === 'dynamic';
@@ -46,10 +46,15 @@ export class ManifestParser {
         console.log(`isLive: ${isLive}`); // tslint:disable-line no-console
         console.log(`duration: ${duration}`); // tslint:disable-line no-console
 
-        return {
+        const streamDescriptor = {
             ...this.defaultStreamDescriptor,
             isLive,
             duration,
+        };
+
+        return {
+            isSuccess: true,
+            streamDescriptor,
         };
     }
 

@@ -26,7 +26,7 @@ function init() {
 
 function wireUpEvents(s: mse.Session) {
     s.onError.register(e => {
-        appendLogLine(`ERROR >> source: ${e.source}, error: ${e.error}`);
+        appendLogLine(`ERROR >> source: ${e.source}, error: ${e.payload}`);
     });
     s.onPositionUpdate.register(e => {
         infoContainer.textContent = `Current time: ${e.currentTime}`;
@@ -39,11 +39,11 @@ function wireUpEvents(s: mse.Session) {
 
     function appendLogLine(text: string) {
         const p = document.createElement('p');
-        const s = document.createElement('span');
-        s.textContent = text;
-        const b = document.createElement('br');
-        p.appendChild(s);
-        p.appendChild(b);
+        const span = document.createElement('span');
+        span.textContent = text;
+        const br = document.createElement('br');
+        p.appendChild(span);
+        p.appendChild(br);
         logContainer.appendChild(p);
     }
 }
@@ -51,7 +51,7 @@ function wireUpEvents(s: mse.Session) {
 function wireUpButtons(startSession: () => mse.Session) {
     const loadButton = document.getElementById('load') as HTMLButtonElement;
     loadButton.onclick = function() {
-        if (!player) {
+        if (!player || session) {
             return;
         }
         session = startSession();
