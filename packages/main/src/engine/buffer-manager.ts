@@ -6,7 +6,7 @@ import { unwrap } from '../helpers/unwrap';
 
 export class BufferManager {
     private isInErrorState = false;
-    private readonly errorEmitter = new ErrorEmitter('bufferController');
+    private readonly errorEmitter = new ErrorEmitter('bufferManager');
 
     private segmentAcquisitionManager: SegmentAcquisitionManager | null;
     private streamInfo: StreamInfo | null;
@@ -39,7 +39,7 @@ export class BufferManager {
     }
 
     public onPositionUpdate(position: number) {
-        console.log('buffer position update', position);
+        console.log('buffer position update', position); // tslint:disable-line
     }
 
     private async appendSegment(position: number, sourceBuffer: SourceBuffer, isInitSegment = false): Promise<Segment | null> {
