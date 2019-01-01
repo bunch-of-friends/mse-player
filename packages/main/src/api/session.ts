@@ -2,17 +2,30 @@ import { Observable } from '@bunch-of-friends/observable';
 import { SessionController } from '../engine/session-controller';
 
 export function createSession(sessionController: SessionController): Session {
+    function isValidState(): boolean {
+        const currentState = sessionController.onStateChanged.getCurrentState();
+        return currentState !== SessionState.Stopped && currentState !== SessionState.Stopping;
+    }
+
     return {
         onError: sessionController.onError,
         onStateChanged: sessionController.onStateChanged,
         onPositionUpdate: sessionController.onPositionUpdate,
+
         pause(): void {
-            sessionController.pause();
+            if (isValidState) {
+                sessionController.pause();
+            }
         },
         resume(): void {
-            sessionController.play();
+            if (isValidState) {
+                sessionController.play();
+            }
         },
         stop(): Promise<void> {
+            if (!isValidState) {
+                return Promise.reject('session already stopped');
+            }
             return sessionController.stop();
         },
     };
@@ -45,12 +58,14 @@ export interface SessionPosition {
 export enum SessionState {
     Created,
     ManifestLoadingStarted,
-    ManifestLoaded,
+    ManifestLoadingEnded,
     InitialBufferingStarted,
-    InitialBufferFilled,
+    InitialBufferingEnded,
     Playing,
     Paused,
     Stalled,
     Seeking,
-    Ended,
+    StreamEnded,
+    Stopping,
+    Stopped,
 }

@@ -11,6 +11,7 @@ init();
 
 function init() {
     player = mse.createPlayer(videoElement);
+
     wireUpButtons(() => {
         const s = player.startSession({
             url: 'http://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
@@ -35,17 +36,10 @@ function wireUpEvents(s: mse.Session) {
     appendLogLine(`STATE >> state: ${mse.SessionState[s.onStateChanged.getCurrentState()]}`);
     s.onStateChanged.register(e => {
         appendLogLine(`STATE >> state: ${mse.SessionState[e]}`);
+        if (e === mse.SessionState.Stopped) {
+            session = null;
+        }
     });
-
-    function appendLogLine(text: string) {
-        const p = document.createElement('p');
-        const span = document.createElement('span');
-        span.textContent = text;
-        const br = document.createElement('br');
-        p.appendChild(span);
-        p.appendChild(br);
-        logContainer.appendChild(p);
-    }
 }
 
 function wireUpButtons(startSession: () => mse.Session) {
@@ -54,8 +48,9 @@ function wireUpButtons(startSession: () => mse.Session) {
         if (!player || session) {
             return;
         }
+        logContainer.textContent = '';
+        infoContainer.textContent = '';
         session = startSession();
-        loadButton.disabled = true;
     };
 
     const stopButton = document.getElementById('stop') as HTMLButtonElement;
@@ -64,9 +59,7 @@ function wireUpButtons(startSession: () => mse.Session) {
             return;
         }
         session.stop().then(() => {
-            loadButton.disabled = false;
-            logContainer.textContent = '';
-            infoContainer.textContent = '';
+            appendLogLine('stop() promise resolved');
         });
     };
 
@@ -85,4 +78,14 @@ function wireUpButtons(startSession: () => mse.Session) {
         }
         session.resume();
     };
+}
+
+function appendLogLine(text: string) {
+    const p = document.createElement('p');
+    const span = document.createElement('span');
+    span.textContent = text;
+    const br = document.createElement('br');
+    p.appendChild(span);
+    p.appendChild(br);
+    logContainer.appendChild(p);
 }

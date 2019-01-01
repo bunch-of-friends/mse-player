@@ -1,12 +1,14 @@
-import { ManifestAquisition, AdaptationSetType, HttpHandler } from '@mse-player/core';
+import { ManifestAcquisition, AdaptationSetType, HttpHandler } from '@mse-player/core';
 import { TemplateSegmentProvider } from './template-segment-provider';
 
 const iso8601DurationRegex = /P(?:([0-9]+)Y)?(?:([0-9]+)M)?(?:([0-9]+)D)?T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+(?:\.[0-9]+)?)?S)?/;
 
 export class ManifestParser {
     private defaultStreamDescriptor = {
-        isLive: false,
-        duration: 634.566,
+        streamInfo: {
+            isLive: false,
+            duration: 634.566,
+        },
         adaptationSets: [
             {
                 type: AdaptationSetType.Video,
@@ -25,7 +27,7 @@ export class ManifestParser {
 
     constructor(private httpHandler: HttpHandler) {}
 
-    public getStreamDescriptor(xml: Document): ManifestAquisition {
+    public getStreamDescriptor(xml: Document): ManifestAcquisition {
         const xmlns = this.getNamespace(xml);
         const typeExpression = '*/@type';
         const durationExpression = '*/@mediaPresentationDuration';
@@ -63,8 +65,10 @@ export class ManifestParser {
 
         const streamDescriptor = {
             ...this.defaultStreamDescriptor,
-            isLive,
-            duration,
+            streamInfo: {
+                isLive,
+                duration,
+            },
         };
 
         return {

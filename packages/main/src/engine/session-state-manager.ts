@@ -1,6 +1,6 @@
 import { createSubject, createObservable, Observable } from '@bunch-of-friends/observable';
 import { SessionState } from '../api/session';
-import { StreamDescriptor, ManifestAquisition } from '@mse-player/core';
+import { StreamDescriptor, ManifestAcquisition } from '@mse-player/core';
 import { VideoElementWrapper } from './video-element-wrapper';
 
 export class SessionStateManager {
@@ -24,7 +24,7 @@ export class SessionStateManager {
                     this.stateSubject.notifyObservers(SessionState.Stalled);
                     break;
                 case MediaState.Ended:
-                    this.stateSubject.notifyObservers(SessionState.Ended);
+                    this.stateSubject.notifyObservers(SessionState.StreamEnded);
                     break;
 
                 default:
@@ -33,12 +33,16 @@ export class SessionStateManager {
         });
     }
 
-    public async decorateLoadManifest(loadManifestFn: () => Promise<ManifestAquisition>): Promise<ManifestAquisition> {
-        return this.executeStateChange(SessionState.ManifestLoadingStarted, SessionState.ManifestLoaded, loadManifestFn);
+    public async decorateLoadManifest(loadManifestFn: () => Promise<ManifestAcquisition>): Promise<ManifestAcquisition> {
+        return this.executeStateChange(SessionState.ManifestLoadingStarted, SessionState.ManifestLoadingEnded, loadManifestFn);
     }
 
     public async decorateInitialBuffering(startBufferingFn: () => Promise<void>): Promise<void> {
-        return this.executeStateChange(SessionState.InitialBufferingStarted, SessionState.InitialBufferFilled, startBufferingFn);
+        return this.executeStateChange(SessionState.InitialBufferingStarted, SessionState.InitialBufferingEnded, startBufferingFn);
+    }
+
+    public async decorateSessionStopping(sessionStoppingFn: () => Promise<void>): Promise<void> {
+        return this.executeStateChange(SessionState.Stopping, SessionState.Stopped, sessionStoppingFn);
     }
 
     public dispose() {

@@ -10,7 +10,7 @@ export class SessionErrorManager {
     public registerErrorEmitter(errorEmitter: ErrorEmitter) {
         errorEmitter.onError.register(error => {
             this.errorSubject.notifyObservers({
-                source: errorEmitter.name,
+                source: errorEmitter.souceName,
                 payload: error.payload,
             });
         });
@@ -24,9 +24,12 @@ export class SessionErrorManager {
     }
 }
 
-export abstract class ErrorEmitter {
-    protected readonly errorSubject = createSubject<InternalError>();
+export class ErrorEmitter {
+    private readonly errorSubject = createSubject<InternalError>();
 
     public readonly onError = createObservable(this.errorSubject);
-    public abstract readonly name: string;
+    constructor(public readonly souceName: string) {}
+    public notifyError(error: InternalError) {
+        this.errorSubject.notifyObservers(error);
+    }
 }

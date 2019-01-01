@@ -80,10 +80,8 @@ export class VideoElementWrapper {
 }
 
 class VideoElementErrorEmitter extends ErrorEmitter {
-    public name: 'videoElement';
-
     constructor(private videoElement: HTMLVideoElement) {
-        super();
+        super('videoElement');
         this.videoElement.addEventListener('error', this.onVideoElementError);
     }
 
@@ -92,6 +90,6 @@ class VideoElementErrorEmitter extends ErrorEmitter {
     }
 
     private onVideoElementError = (): void => {
-        this.errorSubject.notifyObservers({ payload: this.videoElement.error });
+        this.notifyError({ payload: this.videoElement.error });
     };
 }
