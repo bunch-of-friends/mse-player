@@ -30,7 +30,7 @@ export class SessionController {
     }
 
     public async load(options: SessionOptions): Promise<void> {
-        const streamDescriptor = await this.manifestAcquisitionManager.loadStreamDescriptor();
+        const streamDescriptor = await this.manifestAcquisitionManager.loadStreamDescriptor(options.url);
         const abr = DependencyContainer.getAbr(streamDescriptor);
         const segmentAcquisitionManager = new SegmentAcquisitionManager(abr);
 

@@ -39,7 +39,7 @@ export class BufferManager {
     }
 
     public onPositionUpdate(position: number) {
-        console.log('buffer position update', position); // tslint:disable-line
+        // console.log('buffer position update', position); // tslint:disable-line
     }
 
     private async appendSegment(position: number, sourceBuffer: SourceBuffer, isInitSegment = false): Promise<Segment | null> {
@@ -81,14 +81,10 @@ export class BufferManager {
         mediaSource.addEventListener('sourceopen', () => {
             console.log('mediaSource open'); // tslint:disable-line
 
-            if (!this.segmentAcquisitionManager) {
-                throw 'segmentAcquisitionManager is null';
-            }
-
             mediaSource.duration = duration;
             (window as any).m = mediaSource;
 
-            const videoAdaptationSet = this.segmentAcquisitionManager.getAdapdationSet(AdaptationSetType.Video);
+            const videoAdaptationSet = unwrap(this.segmentAcquisitionManager).getAdapdationSet(AdaptationSetType.Video);
             const videoRepresentatons = videoAdaptationSet.representations as Array<VideoRepresentation>;
             const mimeCodec = videoAdaptationSet.mimeType + ';codecs="' + videoRepresentatons.map(x => x.codecs).join(',') + '"';
             if (!MediaSource.isTypeSupported(mimeCodec)) {

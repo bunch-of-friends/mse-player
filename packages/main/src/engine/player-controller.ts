@@ -11,16 +11,16 @@ export class PlayerController {
     }
 
     public startSession(sessionOptions: SessionOptions): Session {
-        const sessionController = this.sessionControllerFactory(sessionOptions);
+        const sessionController = this.sessionControllerFactory();
         sessionController.load(sessionOptions);
         return createSession(sessionController);
     }
 
-    private sessionControllerFactory = (sessionOptions: SessionOptions) => {
+    private sessionControllerFactory = () => {
         if (!this.videoElementWrapper) {
             throw 'videoElementWrapper is null';
         }
 
-        return new SessionController(this.videoElementWrapper, DependencyContainer.getStreamTransport(sessionOptions.url));
+        return new SessionController(this.videoElementWrapper, DependencyContainer.getStreamTransport());
     };
 }

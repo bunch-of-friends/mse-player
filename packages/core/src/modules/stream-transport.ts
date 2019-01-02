@@ -2,13 +2,13 @@ import { HttpHandler } from './http-handler';
 import { InternalError } from './internal-error';
 
 export interface StreamTransportCtr {
-    new (manifestUrl: string, httpHandler: HttpHandler): StreamTransport;
+    new (httpHandler: HttpHandler): StreamTransport;
 }
 
 export abstract class StreamTransport {
-    constructor(protected manifestUrl: string, protected httpHandler: HttpHandler) {}
+    constructor(protected httpHandler: HttpHandler) {}
 
-    public abstract getStreamDescriptor(): Promise<ManifestAcquisition>;
+    public abstract getStreamDescriptor(manifestUrl: string): Promise<ManifestAcquisition>;
 }
 
 export interface ManifestAcquisition {
