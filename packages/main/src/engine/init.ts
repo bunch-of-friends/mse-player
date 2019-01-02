@@ -1,4 +1,4 @@
-import { DependencyContainer } from '@mse-player/core';
+import { DependencyContainer } from '../dependency/dependency-container';
 import { DashStreamTransport } from '@mse-player/dash';
 import { SingleLevelAbr } from '@mse-player/single-level-abr';
 

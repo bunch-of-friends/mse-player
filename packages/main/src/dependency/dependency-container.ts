@@ -1,10 +1,9 @@
 // INFO: this file is a complete throw-away, basicaly a placeholder for a real dependency management implementation
-import { StreamTransport, StreamTransportCtr, StreamDescriptor } from '../modules/stream-transport';
-import { Abr, AbrCtr } from '../modules/abr';
-import { HttpHandler } from '../modules/http-handler';
-import { Analytics } from '../modules/analytics';
+import { Abr, AbrCtr, StreamTransport, StreamTransportCtr, StreamDescriptor } from '@mse-player/core';
+import { HttpHandler } from '../engine/http-handler';
+import { Analytics } from '../engine/analytics';
 
-const analytics = new Analytics();
+const analytics = new Analytics({} as HTMLVideoElement);
 const httpHandler = new HttpHandler(analytics);
 let streamTransportCtr: StreamTransportCtr | null;
 let abrCtr: AbrCtr | null;

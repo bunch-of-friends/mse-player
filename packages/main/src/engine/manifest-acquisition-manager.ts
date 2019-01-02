@@ -1,4 +1,5 @@
-import { StreamDescriptor, StreamTransport, DependencyContainer } from '@mse-player/core';
+import { StreamDescriptor, StreamTransport } from '@mse-player/core';
+import { DependencyContainer } from '../dependency/dependency-container';
 import { SessionStateManager } from './session-state-manager';
 import { ErrorEmitter } from './session-error-manager';
 import { unwrap } from '../helpers/unwrap';

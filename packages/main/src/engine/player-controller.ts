@@ -2,7 +2,7 @@ import { createSession } from '../api/session';
 import { Session, SessionOptions } from '../api/session';
 import { SessionController } from './session-controller';
 import { VideoElementWrapper } from './video-element-wrapper';
-import { DependencyContainer } from '@mse-player/core';
+import { DependencyContainer } from '../dependency/dependency-container';
 
 export class PlayerController {
     private videoElementWrapper: VideoElementWrapper | null;

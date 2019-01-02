@@ -1,6 +1,6 @@
 import { Analytics } from './analytics';
 
-interface CreateXhrOptions<T> {
+export interface CreateXhrOptions<T> {
     url: string;
     httpMethod?: string;
     responseType?: XMLHttpRequestResponseType;
@@ -8,42 +8,9 @@ interface CreateXhrOptions<T> {
     onLoadHandler(xhr: XMLHttpRequest): T;
 }
 
-export class HttpHandler {
+export abstract class HttpHandler {
     constructor(private analytics: Analytics) {}
 
-    public getXml(url: string): Promise<Document | null> {
-        const onLoadHandler = (xhrResponse: XMLHttpRequest) => xhrResponse.responseXML;
-        return this.sendXhr({
-            url,
-            responseType: 'document',
-            mimeType: 'text/xml',
-            onLoadHandler,
-        });
-    }
-
-    public getArrayBuffer(url: string): Promise<ArrayBuffer> {
-        const onLoadHandler = (xhrResponse: XMLHttpRequest) => xhrResponse.response;
-        return this.sendXhr({
-            url,
-            responseType: 'arraybuffer',
-            onLoadHandler,
-        });
-    }
-
-    private sendXhr<T>(options: CreateXhrOptions<T>): Promise<T> {
-        return new Promise(resolve => {
-            const xhr = new XMLHttpRequest();
-            xhr.open(options.httpMethod || 'get', options.url);
-            if (options.responseType) {
-                xhr.responseType = options.responseType;
-            }
-            if (options.mimeType) {
-                xhr.overrideMimeType(options.mimeType);
-            }
-            xhr.onload = function() {
-                resolve(options.onLoadHandler(xhr));
-            };
-            xhr.send();
-        });
-    }
+    public abstract getXml(url: string): Promise<Document | null>;
+    public abstract getArrayBuffer(url: string): Promise<ArrayBuffer>;
 }

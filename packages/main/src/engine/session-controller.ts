@@ -1,4 +1,5 @@
-import { StreamTransport, DependencyContainer } from '@mse-player/core';
+import { StreamTransport } from '@mse-player/core';
+import { DependencyContainer } from '../dependency/dependency-container';
 import { SessionOptions } from '../api/session';
 import { BufferManager } from './buffer-manager';
 import { VideoElementWrapper } from './video-element-wrapper';
