@@ -17,7 +17,7 @@ export class SessionController {
     public readonly onPositionUpdate = this.videoElementWrapper.onPositionUpdate;
 
     constructor(private readonly videoElementWrapper: VideoElementWrapper, streamTransport: StreamTransport) {
-        this.manifestAcquisitionManager = new ManifestAcquisitionManager(this.stateManager, streamTransport);
+        this.manifestAcquisitionManager = new ManifestAcquisitionManager(streamTransport);
         this.bufferManager = new BufferManager(this.videoElementWrapper);
         videoElementWrapper.onPositionUpdate.register(p => this.bufferManager.onPositionUpdate(p.currentTime));
         this.errorManager.onError.register(() => {
@@ -30,10 +30,12 @@ export class SessionController {
     }
 
     public async load(options: SessionOptions): Promise<void> {
-        const streamDescriptor = await this.manifestAcquisitionManager.loadStreamDescriptor(options.url);
+        const streamDescriptor = await this.stateManager.decorateLoadStreamDescriptor(() =>
+            this.manifestAcquisitionManager.loadStreamDescriptor(options.url)
+        );
+
         const abr = DependencyContainer.getAbr(streamDescriptor);
         const segmentAcquisitionManager = new SegmentAcquisitionManager(abr);
-
         this.errorManager.registerErrorEmitter(segmentAcquisitionManager.getErrorEmitter());
 
         return this.stateManager.decorateInitialBuffering(() => {

@@ -3,6 +3,7 @@ import { VideoElementWrapper } from './video-element-wrapper';
 import { ErrorEmitter } from './session-error-manager';
 import { SegmentAcquisitionManager } from './segment-acqusition-manager';
 import { unwrap } from '../helpers/unwrap';
+import { getMimeCodec } from '../helpers/mime-helper';
 
 export class BufferManager {
     private isInErrorState = false;
@@ -85,8 +86,8 @@ export class BufferManager {
             (window as any).m = mediaSource;
 
             const videoAdaptationSet = unwrap(this.segmentAcquisitionManager).getAdapdationSet(AdaptationSetType.Video);
-            const videoRepresentatons = videoAdaptationSet.representations as Array<VideoRepresentation>;
-            const mimeCodec = videoAdaptationSet.mimeType + ';codecs="' + videoRepresentatons.map(x => x.codecs).join(',') + '"';
+            const mimeCodec = getMimeCodec(videoAdaptationSet);
+
             if (!MediaSource.isTypeSupported(mimeCodec)) {
                 throw 'mimeCodec not supported: ' + mimeCodec;
             }
@@ -94,8 +95,8 @@ export class BufferManager {
             const sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
             (window as any).s = sourceBuffer;
 
-            sourceBuffer.addEventListener('error', () => {
-                console.log('sourceBuffer error'); // tslint:disable-line
+            sourceBuffer.addEventListener('error', e => {
+                this.notifyError({ payload: e });
             });
 
             this.appendSegment(0, sourceBuffer, true).then(() => {

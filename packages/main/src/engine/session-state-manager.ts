@@ -33,8 +33,8 @@ export class SessionStateManager {
         });
     }
 
-    public async decorateLoadManifest(loadManifestFn: () => Promise<ManifestAcquisition>): Promise<ManifestAcquisition> {
-        return this.executeStateChange(SessionState.ManifestLoadingStarted, SessionState.ManifestLoadingEnded, loadManifestFn);
+    public async decorateLoadStreamDescriptor(loadStreamDescriptortFn: () => Promise<StreamDescriptor>): Promise<StreamDescriptor> {
+        return this.executeStateChange(SessionState.ManifestLoadingStarted, SessionState.ManifestLoadingEnded, loadStreamDescriptortFn);
     }
 
     public async decorateInitialBuffering(startBufferingFn: () => Promise<void>): Promise<void> {
