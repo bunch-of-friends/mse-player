@@ -15,7 +15,11 @@ export class BufferSizeManager {
         private segmentAcquisitionManager: SegmentAcquisitionManager,
         private onMediaStateChanged: Observable<MediaState>,
         private onPositionChanged: Observable<StreamPosition>
-    ) {}
+    ) {
+        this.onMediaStateChanged.register(() => {});
+
+        this.onPositionChanged.register(() => {});
+    }
 
     public start(position: number) {
         this.appendSegment(0, true).then(() => {
@@ -25,6 +29,7 @@ export class BufferSizeManager {
 
     public stop() {
         this.isStopped = true;
+        this.mediaSourceWrapper.dispose();
     }
 
     private async appendSegment(position: number, isInitSegment = false): Promise<Segment | null> {

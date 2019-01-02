@@ -1,6 +1,6 @@
 import { StreamTransport } from '@mse-player/core';
 import { DependencyContainer } from '../dependency/dependency-container';
-import { SessionOptions } from '../api/session';
+import { SessionOptions, SessionState } from '../api/session';
 import { BufferController } from './buffer-controller';
 import { VideoElementWrapper } from './video-element-wrapper';
 import { SessionErrorManager } from './session-error-manager';
@@ -45,18 +45,35 @@ export class SessionController {
     }
 
     public pause(): void {
+        if (this.canAcceptActions) {
+            throw 'session is stopped or stopping';
+        }
+
         this.videoElementWrapper.pause();
     }
 
     public play(): Promise<void> {
+        if (!this.canAcceptActions) {
+            return Promise.reject('session is stopped or stopping');
+        }
+
         return this.videoElementWrapper.play();
     }
 
     public stop(): Promise<void> {
+        if (!this.canAcceptActions) {
+            return Promise.reject('session is stopped or stopping');
+        }
+
         return this.stateManager.decorateSessionStopping(() => {
             this.bufferController.stop();
             this.errorManager.dispose();
             return this.videoElementWrapper.stop();
         });
+    }
+
+    private canAcceptActions(): boolean {
+        const currentState = this.onStateChanged.getCurrentState();
+        return currentState !== SessionState.Stopped && currentState !== SessionState.Stopping;
     }
 }

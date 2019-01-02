@@ -1,8 +1,8 @@
 import { PlayerController } from '../engine/player-controller';
 import { SessionOptions, Session } from './session';
 
-export function createPlayer(videoElement: HTMLVideoElement): Player {
-    const playerController = new PlayerController(videoElement);
+export function createPlayer(videoElementContainer: HTMLElement): Player {
+    const playerController = new PlayerController(videoElementContainer);
 
     return {
         startSession(sessionOptions: SessionOptions): Session {

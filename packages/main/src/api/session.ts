@@ -2,30 +2,18 @@ import { Observable } from '@bunch-of-friends/observable';
 import { SessionController } from '../engine/session-controller';
 
 export function createSession(sessionController: SessionController): Session {
-    function isValidState(): boolean {
-        const currentState = sessionController.onStateChanged.getCurrentState();
-        return currentState !== SessionState.Stopped && currentState !== SessionState.Stopping;
-    }
-
     return {
         onError: sessionController.onError,
         onStateChanged: sessionController.onStateChanged,
         onPositionUpdate: sessionController.onPositionUpdate,
 
         pause(): void {
-            if (isValidState) {
-                sessionController.pause();
-            }
+            sessionController.pause();
         },
         resume(): void {
-            if (isValidState) {
-                sessionController.play();
-            }
+            sessionController.play();
         },
         stop(): Promise<void> {
-            if (!isValidState) {
-                return Promise.reject('session already stopped');
-            }
             return sessionController.stop();
         },
     };

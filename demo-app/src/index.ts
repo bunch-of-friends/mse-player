@@ -1,6 +1,6 @@
 import * as mse from '@mse-player/main';
 
-const videoElement = document.getElementById('video') as HTMLVideoElement;
+const videoContainer = document.getElementById('video-container') as HTMLVideoElement;
 const infoContainer = document.getElementById('info') as HTMLDivElement;
 const logContainer = document.getElementById('log') as HTMLDivElement;
 
@@ -10,7 +10,7 @@ let session: mse.Session | null;
 init();
 
 function init() {
-    player = mse.createPlayer(videoElement);
+    player = mse.createPlayer(videoContainer);
 
     wireUpButtons(() => {
         const s = player.startSession({
@@ -21,8 +21,6 @@ function init() {
         wireUpEvents(s);
         return s;
     });
-
-    (window as any).v = videoElement;
 }
 
 function wireUpEvents(s: mse.Session) {
