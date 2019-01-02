@@ -1,11 +1,11 @@
 import { createObservable, createSubject } from '@bunch-of-friends/observable';
-import { SessionPosition } from '../api/session';
+import { StreamPosition } from '../api/session';
 import { ErrorEmitter } from './session-error-manager';
 import { MediaState } from './session-state-manager';
 
 export class VideoElementWrapper {
     private readonly errorEmitter: VideoElementErrorEmitter;
-    private readonly positionUpdateSubject = createSubject<SessionPosition>();
+    private readonly positionUpdateSubject = createSubject<StreamPosition>();
     private readonly mediaStateSubject = createSubject<MediaState>();
     public readonly onPositionUpdate = createObservable(this.positionUpdateSubject);
     public readonly onMediaStateChanged = createObservable(this.mediaStateSubject);
@@ -58,6 +58,9 @@ export class VideoElementWrapper {
             this.videoElement.onplaying = null;
             this.videoElement.onseeking = null;
             this.videoElement.onwaiting = null;
+
+            this.onMediaStateChanged.unregisterAllObservers();
+            this.onPositionUpdate.unregisterAllObservers();
         };
 
         return new Promise(resolve => {

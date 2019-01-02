@@ -45,10 +45,6 @@ export class SessionStateManager {
         return this.executeStateChange(SessionState.Stopping, SessionState.Stopped, sessionStoppingFn);
     }
 
-    public dispose() {
-        this.videoElementWrapper.onMediaStateChanged.unregisterAllObservers();
-    }
-
     private async executeStateChange<T>(entryState: SessionState, endState: SessionState, getResult: () => T): Promise<T> {
         this.stateSubject.notifyObservers(entryState);
         const result = await getResult();

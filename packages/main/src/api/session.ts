@@ -40,7 +40,7 @@ export interface SessionOptions {
 export interface Session {
     onError: Observable<SessionError>;
     onStateChanged: Observable<SessionState>;
-    onPositionUpdate: Observable<SessionPosition>;
+    onPositionUpdate: Observable<StreamPosition>;
     pause(): void;
     resume(): void;
     stop(): Promise<void>;
@@ -51,7 +51,7 @@ export interface SessionError {
     payload?: Object | string | null;
 }
 
-export interface SessionPosition {
+export interface StreamPosition {
     currentTime: number;
 }
 

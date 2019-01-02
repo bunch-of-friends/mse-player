@@ -1,7 +1,7 @@
 import { StreamTransport } from '@mse-player/core';
 import { DependencyContainer } from '../dependency/dependency-container';
 import { SessionOptions } from '../api/session';
-import { BufferManager } from './buffer-manager';
+import { BufferController } from './buffer-controller';
 import { VideoElementWrapper } from './video-element-wrapper';
 import { SessionErrorManager } from './session-error-manager';
 import { SessionStateManager } from './session-state-manager';
@@ -9,7 +9,7 @@ import { ManifestAcquisitionManager } from './manifest-acquisition-manager';
 import { SegmentAcquisitionManager } from './segment-acqusition-manager';
 
 export class SessionController {
-    private readonly bufferManager: BufferManager;
+    private readonly bufferController: BufferController;
     private readonly errorManager = new SessionErrorManager();
     private readonly stateManager = new SessionStateManager(this.videoElementWrapper);
     private readonly manifestAcquisitionManager: ManifestAcquisitionManager;
@@ -19,15 +19,14 @@ export class SessionController {
 
     constructor(private readonly videoElementWrapper: VideoElementWrapper, streamTransport: StreamTransport) {
         this.manifestAcquisitionManager = new ManifestAcquisitionManager(streamTransport);
-        this.bufferManager = new BufferManager(this.videoElementWrapper);
-        videoElementWrapper.onPositionUpdate.register(p => this.bufferManager.onPositionUpdate(p.currentTime));
+        this.bufferController = new BufferController(this.videoElementWrapper);
         this.errorManager.onError.register(() => {
             this.stop();
         });
 
         this.errorManager.registerErrorEmitter(videoElementWrapper.getErrorEmitter());
         this.errorManager.registerErrorEmitter(this.manifestAcquisitionManager.getErrorEmitter());
-        this.errorManager.registerErrorEmitter(this.bufferManager.getErrorEmitter());
+        this.errorManager.registerErrorEmitter(this.bufferController.getErrorEmitter());
     }
 
     public async load(options: SessionOptions): Promise<void> {
@@ -39,25 +38,23 @@ export class SessionController {
         const segmentAcquisitionManager = new SegmentAcquisitionManager(abr);
         this.errorManager.registerErrorEmitter(segmentAcquisitionManager.getErrorEmitter());
 
-        return this.stateManager.decorateInitialBuffering(() => {
-            this.bufferManager.initialise(options.startingPosition, segmentAcquisitionManager, streamDescriptor.streamInfo);
+        return this.stateManager.decorateInitialBuffering(async () => {
+            await this.bufferController.initialise(segmentAcquisitionManager, streamDescriptor.streamInfo, options.startingPosition);
             return this.play();
         });
     }
 
     public pause(): void {
-        this.bufferManager.pause();
         this.videoElementWrapper.pause();
     }
 
     public play(): Promise<void> {
-        this.bufferManager.play();
         return this.videoElementWrapper.play();
     }
 
     public stop(): Promise<void> {
         return this.stateManager.decorateSessionStopping(() => {
-            this.bufferManager.dispose();
+            this.bufferController.stop();
             this.errorManager.dispose();
             return this.videoElementWrapper.stop();
         });

@@ -3,6 +3,7 @@ import { ErrorEmitter } from './session-error-manager';
 
 export class SegmentAcquisitionManager {
     private readonly errorEmitter = new ErrorEmitter('segmentAcquisition');
+    private currentAquisitionPromise: Promise<SegmentAcquisition> | null;
 
     constructor(private abr: Abr) {}
 
@@ -10,9 +11,20 @@ export class SegmentAcquisitionManager {
         return this.errorEmitter;
     }
 
-    public acquireSegment(type: AdaptationSetType, position: number, isInitSegment = false): Promise<SegmentAcquisition> {
+    public isAcquiring(): boolean {
+        return this.currentAquisitionPromise !== null;
+    }
+
+    public async acquireSegment(type: AdaptationSetType, position: number, isInitSegment = false): Promise<SegmentAcquisition> {
         const representation = this.abr.getNextSegmentRepresentation(this.getAdapdationSet(type));
-        return isInitSegment ? representation.segmentProvider.getInitSegment() : representation.segmentProvider.getNextSegment(position);
+
+        this.currentAquisitionPromise = isInitSegment
+            ? representation.segmentProvider.getInitSegment()
+            : representation.segmentProvider.getNextSegment(position);
+
+        const aquisition = await this.currentAquisitionPromise;
+        this.currentAquisitionPromise = null;
+        return aquisition;
     }
 
     public getAdapdationSet(type: AdaptationSetType): AdaptationSet {
