@@ -19,11 +19,11 @@ export class DependencyContainer {
         return httpHandler;
     }
 
-    public static getStreamTransport(manifestUrl: string): StreamTransport {
+    public static getStreamTransport(): StreamTransport {
         if (!streamTransportCtr) {
             throw new Error('streamTransportCtr not set');
         }
-        return new streamTransportCtr(manifestUrl, this.getHttpHandler());
+        return new streamTransportCtr(this.getHttpHandler());
     }
 
     public static getAbr(streamDescriptor: StreamDescriptor): Abr {
