@@ -1,4 +1,4 @@
-import { Analytics, CreateXhrOptions, HttpHandler as IHttpHandler } from '@mse-player/core';
+import { Analytics, HttpHandler as IHttpHandler } from '@mse-player/core';
 export class HttpHandler extends IHttpHandler {
     public getXml(url: string): Promise<Document | null> {
         const onLoadHandler = (xhrResponse: XMLHttpRequest) => xhrResponse.responseXML;
@@ -35,4 +35,12 @@ export class HttpHandler extends IHttpHandler {
             xhr.send();
         });
     }
+}
+
+interface CreateXhrOptions<T> {
+    url: string;
+    httpMethod?: string;
+    responseType?: XMLHttpRequestResponseType;
+    mimeType?: string;
+    onLoadHandler(xhr: XMLHttpRequest): T;
 }
