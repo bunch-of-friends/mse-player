@@ -5,20 +5,23 @@ import { TemplateSegmentProvider, TemplateSegmentInfo } from './template-segment
 const iso8601DurationRegex = /P(?:([0-9]+)Y)?(?:([0-9]+)M)?(?:([0-9]+)D)?T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+(?:\.[0-9]+)?)?S)?/;
 
 export class ManifestParser {
-    constructor(private httpHandler: HttpHandler, private xpathHelper = new XpathHelper()) {}
+    private xpathHelper: XpathHelper;
+
+    constructor(private httpHandler: HttpHandler) {}
 
     public getStreamDescriptor(xml: Document): ManifestAcquisition {
-        const namespace = this.xpathHelper.getNamespace(xml);
+        this.xpathHelper = new XpathHelper(xml, this.getNamespace(xml));
+
         const streamInfoExpression = this.xpathHelper.concatenateExpressions(Expressions.TYPE, Expressions.DURATION);
-        const streamInfo = this.xpathHelper.getAttributes(streamInfoExpression, xml, xml, namespace);
+        const streamInfo = this.xpathHelper.getAttributes(streamInfoExpression, xml);
 
         const isLive = streamInfo[0] === 'dynamic';
         const duration = (streamInfo[1] && this.getSecondsFromManifestTimeValue(streamInfo[1])) || 0;
         const absoluteUrl = xml.URL.replace(xml.URL.substring(xml.URL.lastIndexOf('/') + 1), '');
 
-        const adaptationSetNodes = this.xpathHelper.getNodes(Expressions.ADAPTATION_SET, xml, xml, namespace);
+        const adaptationSetNodes = this.xpathHelper.getNodes(Expressions.ADAPTATION_SET, xml);
         const adaptationSets: Array<AdaptationSet> = [];
-        adaptationSetNodes.forEach(x => adaptationSets.push(this.parseAdaptationSet(x, xml, namespace, duration, absoluteUrl)));
+        adaptationSetNodes.forEach(x => adaptationSets.push(this.parseAdaptationSet(x, duration, absoluteUrl)));
 
         const manifestAcquisition = {
             isSuccess: true,
@@ -35,44 +38,52 @@ export class ManifestParser {
         return manifestAcquisition;
     }
 
-    private parseAdaptationSet(adaptationSetNode: Node, document: Document, namespace: string | null, assetDuration: number, absoluteUrl: string) {
-        const type = this.xpathHelper.getAttributes(Expressions.CONTENT_TYPE, document, adaptationSetNode, namespace)[0] || '';
-        const initTemplate = this.xpathHelper.getAttributes(Expressions.INIT_TEMPLATE, document, adaptationSetNode, namespace)[0] || '';
-        const mediaTemplate = this.xpathHelper.getAttributes(Expressions.MEDIA_TEMPLATE, document, adaptationSetNode, namespace)[0] || '';
-        const representationNodes = this.xpathHelper.getNodes(Expressions.REPRESENTATION, document, adaptationSetNode, namespace);
+    private parseAdaptationSet(adaptationSetNode: Node, assetDuration: number, absoluteUrl: string) {
+        const type = this.xpathHelper.getAttributes(Expressions.CONTENT_TYPE, adaptationSetNode)[0] || '';
+        const initTemplate = this.xpathHelper.getAttributes(Expressions.INIT_TEMPLATE, adaptationSetNode)[0] || '';
+        const mediaTemplate = this.xpathHelper.getAttributes(Expressions.MEDIA_TEMPLATE, adaptationSetNode)[0] || '';
+        const representationNodes = this.xpathHelper.getNodes(Expressions.REPRESENTATION, adaptationSetNode);
         const representations: Array<Representation> = [];
         const segmentInfo = { assetDuration, initTemplate, mediaTemplate, type, absoluteUrl };
-        representationNodes.forEach(y => representations.push(this.parseRepresentation(y, document, namespace, segmentInfo)));
+        representationNodes.forEach(y => representations.push(this.parseRepresentation(y, segmentInfo)));
         return {
             type: type as AdaptationSetType,
-            mimeType: this.xpathHelper.getAttributes(Expressions.MIME_TYPES, document, adaptationSetNode, namespace)[0] || '',
+            mimeType: this.xpathHelper.getAttributes(Expressions.MIME_TYPES, adaptationSetNode)[0] || '',
             representations: representations,
         };
     }
 
-    private parseRepresentation(representationNode: Node, document: Document, namespace: string | null, segmentInfo: TemplateSegmentInfo) {
-        const id = this.xpathHelper.getAttributes(Expressions.ID, document, representationNode, namespace)[0] || '';
+    private parseRepresentation(representationNode: Node, segmentInfo: TemplateSegmentInfo) {
+        const id = this.xpathHelper.getAttributes(Expressions.ID, representationNode)[0] || '';
         const representation = {
-            codecs: this.xpathHelper.getAttributes(Expressions.CODECS, document, representationNode, namespace)[0] || '',
+            codecs: this.xpathHelper.getAttributes(Expressions.CODECS, representationNode)[0] || '',
             id: id,
-            bandwidth: parseInt(this.xpathHelper.getAttributes(Expressions.BANDWIDTH, document, representationNode, namespace)[0], 10) || 0,
+            bandwidth: parseInt(this.xpathHelper.getAttributes(Expressions.BANDWIDTH, representationNode)[0], 10) || 0,
             segmentProvider: new TemplateSegmentProvider(segmentInfo, id, this.httpHandler),
         };
 
         if (segmentInfo.type === AdaptationSetType.Video) {
             return {
                 ...representation,
-                width: parseInt(this.xpathHelper.getAttributes(Expressions.WIDTH, document, representationNode, namespace)[0], 10) || 0,
-                height: parseInt(this.xpathHelper.getAttributes(Expressions.HEIGHT, document, representationNode, namespace)[0], 10) || 0,
-                frameRate: parseInt(this.xpathHelper.getAttributes(Expressions.FRAME_RATE, document, representationNode, namespace)[0], 10) || 0,
+                width: parseInt(this.xpathHelper.getAttributes(Expressions.WIDTH, representationNode)[0], 10) || 0,
+                height: parseInt(this.xpathHelper.getAttributes(Expressions.HEIGHT, representationNode)[0], 10) || 0,
+                frameRate: parseInt(this.xpathHelper.getAttributes(Expressions.FRAME_RATE, representationNode)[0], 10) || 0,
             };
         } else {
             return {
                 ...representation,
-                channels: parseInt(this.xpathHelper.getAttributes(Expressions.AUDIO_CHANNELS, document, representationNode, namespace)[0], 10) || 0,
-                samplingRate: parseInt(this.xpathHelper.getAttributes(Expressions.SAMPLING_RATE, document, representationNode, namespace)[0], 10) || 0,
+                channels: parseInt(this.xpathHelper.getAttributes(Expressions.AUDIO_CHANNELS, representationNode)[0], 10) || 0,
+                samplingRate: parseInt(this.xpathHelper.getAttributes(Expressions.SAMPLING_RATE, representationNode)[0], 10) || 0,
             };
         }
+    }
+
+    private getNamespace(xml: Document): string | null {
+        const firstElement = xml.firstElementChild;
+        if (!firstElement) {
+            return null;
+        }
+        return firstElement.namespaceURI;
     }
 
     private getSecondsFromManifestTimeValue(time: string): number {

@@ -1,6 +1,8 @@
 export class XpathHelper {
-    public getAttributes(expression: string, xml: Document, rootNode: Node, namespace: string | null): Array<string> {
-        const nodes = this.getNodes(expression, xml, rootNode, namespace);
+    constructor(private document: Document, private namespace: string | null) {}
+
+    public getAttributes(expression: string, rootNode: Node): Array<string> {
+        const nodes = this.getNodes(expression, rootNode);
         const result: Array<string> = [];
         nodes.forEach(x => {
             if (x.nodeValue) {
@@ -11,14 +13,14 @@ export class XpathHelper {
         return result;
     }
 
-    public getNodes(expression: string, xml: Document, rootNode: Node, namespace: string | null): Array<Node> {
-        const res = xml.evaluate(
+    public getNodes(expression: string, rootNode: Node): Array<Node> {
+        const res = this.document.evaluate(
             expression,
             rootNode,
             prefix => {
                 switch (prefix) {
                     case 'xmlns':
-                        return namespace;
+                        return this.namespace;
                     default:
                         return null;
                 }
@@ -39,13 +41,5 @@ export class XpathHelper {
 
     public concatenateExpressions(...expressions: Array<string>): string {
         return `/${expressions.join('|')}`;
-    }
-
-    public getNamespace(xml: Document): string | null {
-        const firstElement = xml.firstElementChild;
-        if (!firstElement) {
-            return null;
-        }
-        return firstElement.namespaceURI;
     }
 }
