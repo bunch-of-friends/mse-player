@@ -45,7 +45,7 @@ export class SessionController {
     }
 
     public pause(): void {
-        if (this.canAcceptActions) {
+        if (!this.canAcceptActions) {
             throw 'session is stopped or stopping';
         }
 

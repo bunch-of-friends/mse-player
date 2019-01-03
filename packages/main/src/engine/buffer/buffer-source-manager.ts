@@ -27,13 +27,19 @@ export class BufferSourceManager {
     }
 
     public async initialise(position: number): Promise<void> {
-        this.mediaSourceWrapper = await this.createMediaSourceWrapper(this.adapdationSets);
+        this.mediaSourceWrapper = await this.createMediaSourceWrapper();
 
-        const video = unwrap(this.adapdationSets.find(x => x.type === AdaptationSetType.Video));
-        this.appendAllSegments(video, 0);
-        // this.adapdationSets.forEach(a => {
-        //     this.appendAllSegments(a, position);
-        // });
+        const startingRepresentations = this.adapdationSets.map(a => {
+            return {
+                adaptationSet: a,
+                representation: this.segmentAcquisitionManager.getStartingRepresentation(a),
+            };
+        });
+
+        this.mediaSourceWrapper.initialiseSources(startingRepresentations);
+        this.adapdationSets.forEach(x => {
+            this.appendAllSegments(x, position);
+        });
     }
 
     public stop() {
@@ -44,12 +50,8 @@ export class BufferSourceManager {
         }
     }
 
-    private createMediaSourceWrapper(adapdationSets: Array<AdaptationSet>): Promise<MediaSourceWrapper> {
-        if (!this.segmentAcquisitionManager || !this.streamInfo) {
-            throw 'segmentAcquisitionManager or streamInfo is null';
-        }
-
-        const mediaSourceWrapper = new MediaSourceWrapper(this.errorEmitter, this.streamInfo, adapdationSets);
+    private createMediaSourceWrapper(): Promise<MediaSourceWrapper> {
+        const mediaSourceWrapper = new MediaSourceWrapper(this.errorEmitter, this.streamInfo);
         this.videoElementWrapper.setSource(mediaSourceWrapper.getSourceUrl());
 
         return new Promise(resolve => {
@@ -61,14 +63,14 @@ export class BufferSourceManager {
     }
 
     private async appendAllSegments(adaptation: AdaptationSet, startingPosition: number): Promise<void> {
-        let currentBufferEnd = startingPosition;
-        while (currentBufferEnd <= unwrap(this.mediaSourceWrapper).getBufferDuration()) {
-            await this.acquireAndAppendSegment(adaptation, 0, true);
-            const nextSegment = await this.acquireAndAppendSegment(adaptation, currentBufferEnd);
+        await this.acquireAndAppendSegment(adaptation, 0, true);
+        let currentBufferEndPosition = startingPosition;
+        while (currentBufferEndPosition <= unwrap(this.mediaSourceWrapper).getBufferDuration()) {
+            const nextSegment = await this.acquireAndAppendSegment(adaptation, currentBufferEndPosition);
             if (!nextSegment) {
                 return;
             }
-            currentBufferEnd = nextSegment.segmentEndTime;
+            currentBufferEndPosition = nextSegment.segmentEndTime;
         }
     }
 

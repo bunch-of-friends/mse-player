@@ -2,6 +2,7 @@ import { StreamInfo, AdaptationSet, AdaptationSetType, Segment, Representation, 
 import { createSubject, createObservable } from '@bunch-of-friends/observable';
 import { getMimeCodec } from '../../helpers/mime-helper';
 import { EventEmitter } from '../../common/event-emitter';
+import { unwrap } from '../../helpers/unwrap';
 
 export class MediaSourceWrapper {
     private isDisposed = false;
@@ -10,26 +11,10 @@ export class MediaSourceWrapper {
     private sourceBuffers = new Map<AdaptationSet, SourceBufferRecord>();
     public onBufferOpen = createObservable(this.bufferOpenSubject);
 
-    constructor(
-        private readonly errorEmitter: EventEmitter<InternalError>,
-        private readonly streamInfo: StreamInfo,
-        adaptationSets: Array<AdaptationSet>
-    ) {
+    constructor(private readonly errorEmitter: EventEmitter<InternalError>, private readonly streamInfo: StreamInfo) {
         this.mediaSource.addEventListener('sourceopen', this.onMediaSourceOpen);
         this.mediaSource.addEventListener('sourcended', this.onMediaSourceEnded);
         this.mediaSource.addEventListener('sourceclose', this.onMediaSourceClosed);
-
-        for (let i = 0; i < adaptationSets.length; i++) {
-            const adaptation = adaptationSets[i];
-            const mimeCodec = getMimeCodec(adaptation);
-            if (!MediaSource.isTypeSupported(mimeCodec)) {
-                this.errorEmitter.notifyEvent({ payload: 'codec not supported: ' + mimeCodec });
-                this.dispose();
-                return;
-            }
-
-            this.sourceBuffers.set(adaptation, { currentCodec: '', sourceBuffer: null, listeners: [] });
-        }
     }
 
     public getSourceUrl(): string {
@@ -38,6 +23,31 @@ export class MediaSourceWrapper {
 
     public getBufferDuration(): number {
         return this.mediaSource.duration;
+    }
+
+    public initialiseSources(startingRepresentations: Array<{ adaptationSet: AdaptationSet; representation: Representation }>): void {
+        for (let i = 0; i < startingRepresentations.length; i++) {
+            const r = startingRepresentations[i];
+            const adaptationMimeCodec = getMimeCodec(r.adaptationSet);
+            if (!MediaSource.isTypeSupported(adaptationMimeCodec)) {
+                this.errorEmitter.notifyEvent({ payload: 'codec not supported: ' + adaptationMimeCodec });
+                this.dispose();
+                return;
+            }
+
+            const representationMimeCodec = getMimeCodec(r.adaptationSet, r.representation);
+            const sourceBufferCreationResult = this.createSourceBuffer(representationMimeCodec);
+            if (!sourceBufferCreationResult) {
+                this.dispose();
+                return;
+            }
+
+            this.sourceBuffers.set(r.adaptationSet, {
+                currentCodec: representationMimeCodec,
+                sourceBuffer: sourceBufferCreationResult.sourceBuffer,
+                listeners: sourceBufferCreationResult.listeners,
+            });
+        }
     }
 
     public appendSegment(adaptationSet: AdaptationSet, representation: Representation, segment: Segment): void {
@@ -51,29 +61,18 @@ export class MediaSourceWrapper {
             return;
         }
 
-        const sourceBufferHolder = this.sourceBuffers.get(adaptationSet);
-        if (!sourceBufferHolder) {
-            this.errorEmitter.notifyEvent({ payload: 'sourcebuffer not found for adaptation set, mimeType: ' + adaptationSet.mimeType });
-            this.dispose();
-            return;
-        }
-
+        const sourceBufferRecord = unwrap(this.sourceBuffers.get(adaptationSet));
         const mimeCodec = getMimeCodec(adaptationSet, representation);
-        if (!sourceBufferHolder.sourceBuffer) {
-            const sourceBufferCreationResult = this.createSourceBuffer(mimeCodec);
-            if (!sourceBufferCreationResult) {
-                this.dispose();
-                return;
-            }
-            sourceBufferHolder.sourceBuffer = sourceBufferCreationResult.sourceBuffer;
-            sourceBufferHolder.listeners.concat(sourceBufferCreationResult.listeners);
-            sourceBufferHolder.currentCodec = mimeCodec;
-        } else if (sourceBufferHolder.currentCodec !== mimeCodec) {
+
+        if (sourceBufferRecord.currentCodec !== mimeCodec) {
             // INFO: TS doesn't know about the changeType fn
-            (sourceBufferHolder.sourceBuffer as any).changeType(mimeCodec);
+            (sourceBufferRecord.sourceBuffer as any).changeType(mimeCodec);
         }
 
-        sourceBufferHolder.sourceBuffer.appendBuffer(segment.data);
+        if (sourceBufferRecord.sourceBuffer.updating) {
+            throw 'source buffer is currently updating';
+        }
+        sourceBufferRecord.sourceBuffer.appendBuffer(segment.data);
     }
 
     public dispose() {
@@ -130,7 +129,7 @@ export class MediaSourceWrapper {
 
 interface SourceBufferRecord {
     currentCodec: string;
-    sourceBuffer: SourceBuffer | null;
+    sourceBuffer: SourceBuffer;
     listeners: Array<EventListenerRecord>;
 }
 

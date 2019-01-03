@@ -7,6 +7,10 @@ export class SegmentAcquisitionManager {
 
     constructor(private abr: Abr) {}
 
+    public getStartingRepresentation(adapdationSet: AdaptationSet): Representation {
+        return this.abr.getNextSegmentRepresentation(adapdationSet);
+    }
+
     public getErrorEmitter() {
         return this.errorEmitter;
     }
