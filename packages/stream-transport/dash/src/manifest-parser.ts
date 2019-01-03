@@ -7,6 +7,8 @@ const DURATION_EXPRESSION = '*/@mediaPresentationDuration';
 const ADAPTATION_SET_EXPRESSION = '*//xmlns:AdaptationSet';
 const CONTENT_TYPE_EXPRESSION = '@contentType';
 const MIME_TYPES_EXPRESSION = '@mimeType';
+const INIT_TEMPLATE_EXPRESSION = 'xmlns:SegmentTemplate/@initialization';
+const MEDIA_TEMPLATE_EXPRESSION = 'xmlns:SegmentTemplate/@media';
 const REPRESENTATION_EXPRESSION = 'xmlns:Representation';
 const CODECS_EXPRESSION = '@codecs';
 const ID_EXPRESSION = '@id';
@@ -26,10 +28,11 @@ export class ManifestParser {
 
         const isLive = streamInfo[0] === 'dynamic';
         const duration = (streamInfo[1] && this.getSecondsFromManifestTimeValue(streamInfo[1])) || 0;
+        const absoluteUrl = xml.URL.replace(xml.URL.substring(xml.URL.lastIndexOf('/') + 1), '');
 
         const adaptationSetNodes = this.evaluateXpathNodes(ADAPTATION_SET_EXPRESSION, xml, xml, namespace);
         const adaptationSets: Array<AdaptationSet> = [];
-        adaptationSetNodes.forEach(x => adaptationSets.push(this.parseAdaptationSet(x, xml, namespace, duration)));
+        adaptationSetNodes.forEach(x => adaptationSets.push(this.parseAdaptationSet(x, xml, namespace, duration, absoluteUrl)));
 
         const manifestAcquisition = {
             isSuccess: true,
@@ -46,11 +49,15 @@ export class ManifestParser {
         return manifestAcquisition;
     }
 
-    private parseAdaptationSet(adaptationSetNode: Node, document: Document, namespace: string | null, duration: number) {
+    private parseAdaptationSet(adaptationSetNode: Node, document: Document, namespace: string | null, duration: number, baseUrl: string) {
         const type = this.evaluateXpathAttributes(CONTENT_TYPE_EXPRESSION, document, adaptationSetNode, namespace)[0] || '';
+        const initTemplate = this.evaluateXpathAttributes(INIT_TEMPLATE_EXPRESSION, document, adaptationSetNode, namespace)[0] || '';
+        const mediaTemplate = this.evaluateXpathAttributes(MEDIA_TEMPLATE_EXPRESSION, document, adaptationSetNode, namespace)[0] || '';
         const representationNodes = this.evaluateXpathNodes(REPRESENTATION_EXPRESSION, document, adaptationSetNode, namespace);
         const representations: Array<VideoRepresentation | AudioRepresentation> = [];
-        representationNodes.forEach(y => representations.push(this.parseRepresentation(y, document, namespace, duration, type)));
+        representationNodes.forEach(y =>
+            representations.push(this.parseRepresentation(y, document, namespace, duration, initTemplate, mediaTemplate, type, baseUrl))
+        );
         return {
             type: type as AdaptationSetType,
             mimeType: this.evaluateXpathAttributes(MIME_TYPES_EXPRESSION, document, adaptationSetNode, namespace)[0] || '',
@@ -58,12 +65,22 @@ export class ManifestParser {
         };
     }
 
-    private parseRepresentation(representationNode: Node, document: Document, namespace: string | null, duration: number, type: string) {
+    private parseRepresentation(
+        representationNode: Node,
+        document: Document,
+        namespace: string | null,
+        duration: number,
+        initTemplate: string,
+        mediaTemplate: string,
+        type: string,
+        baseUrl: string
+    ) {
+        const id = this.evaluateXpathAttributes(ID_EXPRESSION, document, representationNode, namespace)[0] || '';
         const representation = {
             codecs: this.evaluateXpathAttributes(CODECS_EXPRESSION, document, representationNode, namespace)[0] || '',
-            id: this.evaluateXpathAttributes(ID_EXPRESSION, document, representationNode, namespace)[0] || '',
+            id: id,
             bandwidth: parseInt(this.evaluateXpathAttributes(BANDWIDTH_EXPRESSION, document, representationNode, namespace)[0], 10) || 0,
-            segmentProvider: new TemplateSegmentProvider(duration, this.httpHandler),
+            segmentProvider: new TemplateSegmentProvider(duration, initTemplate, mediaTemplate, baseUrl, id, this.httpHandler),
         };
 
         if (type === AdaptationSetType.Video) {
