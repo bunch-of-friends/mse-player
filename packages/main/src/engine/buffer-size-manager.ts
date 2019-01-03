@@ -21,7 +21,7 @@ export class BufferSizeManager {
         });
 
         this.onPositionChanged.register(() => {
-            // 
+            //
         });
     }
 

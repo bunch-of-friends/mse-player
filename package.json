@@ -21,7 +21,7 @@
         "cleanup": "lerna run cleanup --parallel",
         "rebuild": "npm run cleanup && npm run build",
         "lint": "tslint '**/*.ts{,x}' -e '**/**/*d.ts' -e '**/node_modules/**'",
-        "prettier": "prettier --write '**/**/*.{ts,tsx,css}' '!**/coverage/**'",
+        "prettier": "prettier --write '**/**/*.{ts,tsx,css}' '!**/coverage/**' '!**/dist/**'",
         "reset": "lerna clean --yes && rimraf -rf node_modules && npm i",
         "prepublish": "npm run rebuild",
         "publish": "lerna publish --force-publish=* --skip-npm --skip-git",
