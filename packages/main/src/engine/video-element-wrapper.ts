@@ -1,7 +1,8 @@
 import { createObservable, createSubject } from '@bunch-of-friends/observable';
+import { InternalError } from '@mse-player/core';
 import { StreamPosition } from '../api/session';
-import { ErrorEmitter } from './session-error-manager';
 import { MediaState } from './session-state-manager';
+import { EventEmitter } from './event-emitter';
 
 export class VideoElementWrapper {
     private readonly errorEmitter: VideoElementErrorEmitter;
@@ -34,7 +35,7 @@ export class VideoElementWrapper {
         };
     }
 
-    public getErrorEmitter(): ErrorEmitter {
+    public getErrorEmitter(): EventEmitter<InternalError> {
         return this.errorEmitter;
     }
 
@@ -82,7 +83,7 @@ export class VideoElementWrapper {
     }
 }
 
-class VideoElementErrorEmitter extends ErrorEmitter {
+class VideoElementErrorEmitter extends EventEmitter<InternalError> {
     constructor(private videoElement: HTMLVideoElement) {
         super('videoElement');
         this.videoElement.addEventListener('error', this.onVideoElementError);
@@ -93,6 +94,6 @@ class VideoElementErrorEmitter extends ErrorEmitter {
     }
 
     private onVideoElementError = (): void => {
-        this.notifyError({ payload: this.videoElement.error });
+        this.notifyEvent({ payload: this.videoElement.error });
     };
 }

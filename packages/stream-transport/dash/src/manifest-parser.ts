@@ -1,13 +1,12 @@
-import { AdaptationSet, AdaptationSetType, HttpHandler, ManifestAcquisition, Representation, XpathHelper } from '@mse-player/core';
-import * as Expressions from './constants/xpath-expressions';
+import { AdaptationSet, AdaptationSetType, HttpHandlerBase, ManifestAcquisition, Representation, XpathHelper } from '@mse-player/core';
 import { TemplateSegmentProvider, TemplateSegmentInfo } from './template-segment-provider';
+import * as Expressions from './constants/xpath-expressions';
 
 const iso8601DurationRegex = /P(?:([0-9]+)Y)?(?:([0-9]+)M)?(?:([0-9]+)D)?T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+(?:\.[0-9]+)?)?S)?/;
 
 export class ManifestParser {
     private xpathHelper: XpathHelper;
-
-    constructor(private httpHandler: HttpHandler) {}
+    constructor(private httpHandler: HttpHandlerBase) {}
 
     public getStreamDescriptor(xml: Document): ManifestAcquisition {
         this.xpathHelper = new XpathHelper(xml, this.getNamespace(xml));

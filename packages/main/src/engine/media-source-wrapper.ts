@@ -1,7 +1,7 @@
-import { ErrorEmitter } from './session-error-manager';
-import { StreamInfo, AdaptationSet, AdaptationSetType, Segment } from '@mse-player/core';
+import { AdaptationSet, AdaptationSetType, InternalError, StreamInfo, Segment } from '@mse-player/core';
 import { getMimeCodec } from '../helpers/mime-helper';
 import { createSubject, createObservable } from '@bunch-of-friends/observable';
+import { EventEmitter } from './event-emitter';
 
 export class MediaSourceWrapper {
     private isDisposed = false;
@@ -12,7 +12,7 @@ export class MediaSourceWrapper {
     public onBufferOpen = createObservable(this.bufferOpenSubject);
 
     constructor(
-        private eventEmitter: ErrorEmitter,
+        private eventEmitter: EventEmitter<InternalError>,
         private streamInfo: StreamInfo,
         private videoAdapdationSet: AdaptationSet,
         private audioAdaptationSet: AdaptationSet
@@ -102,16 +102,16 @@ export class MediaSourceWrapper {
     };
 
     private onVideoSourceBufferError = (e: Event) => {
-        this.eventEmitter.notifyError({ payload: { type: 'video', event: e } });
+        this.eventEmitter.notifyEvent({ payload: { type: 'video', event: e } });
     };
 
     private onAudioSourceBufferError = (e: Event) => {
-        this.eventEmitter.notifyError({ payload: { type: 'audio', event: e } });
+        this.eventEmitter.notifyEvent({ payload: { type: 'audio', event: e } });
     };
 
     private isMimeCodecSupported(mimeCodec: string): boolean {
         if (!MediaSource.isTypeSupported(mimeCodec)) {
-            this.eventEmitter.notifyError({ payload: 'mimeType or codec not supported: ' + mimeCodec });
+            this.eventEmitter.notifyEvent({ payload: 'mimeType or codec not supported: ' + mimeCodec });
             return false;
         } else {
             return true;

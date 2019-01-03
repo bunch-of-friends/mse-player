@@ -1,5 +1,12 @@
-export abstract class Analytics {
-    constructor(private videoElement: HTMLVideoElement) {}
+import { EventEmitterBase } from './event-emitter';
 
-    public abstract getLatestPlayoutData(): {};
+export abstract class BaseAnalyticsManager {
+    constructor(protected videoElement: HTMLVideoElement) {}
+
+    public abstract registerAnalyticsEmitter(emitter: EventEmitterBase<AnalyticsData>): void;
+}
+
+export interface AnalyticsData {
+    source: string;
+    data: any;
 }

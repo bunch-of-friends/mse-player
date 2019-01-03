@@ -1,12 +1,12 @@
-import { AdaptationSetType, StreamInfo } from '@mse-player/core';
+import { AdaptationSetType, InternalError, StreamInfo } from '@mse-player/core';
 import { VideoElementWrapper } from './video-element-wrapper';
-import { ErrorEmitter } from './session-error-manager';
 import { SegmentAcquisitionManager } from './segment-acqusition-manager';
 import { MediaSourceWrapper } from './media-source-wrapper';
 import { BufferSizeManager } from './buffer-size-manager';
+import { EventEmitter } from './event-emitter';
 
 export class BufferController {
-    private readonly errorEmitter = new ErrorEmitter('bufferController');
+    private readonly errorEmitter = new EventEmitter<InternalError>('bufferController');
     private isInErrorState = false;
     private streamInfo: StreamInfo | null;
     private bufferSizeManager: BufferSizeManager | null;
@@ -32,7 +32,7 @@ export class BufferController {
         this.bufferSizeManager.start(startingPosition);
     }
 
-    public getErrorEmitter(): ErrorEmitter {
+    public getErrorEmitter(): EventEmitter<InternalError> {
         return this.errorEmitter;
     }
 

@@ -1,8 +1,7 @@
-import { StreamDescriptor, SegmentAcquisition, AdaptationSetType, Abr, AdaptationSet } from '@mse-player/core';
-import { ErrorEmitter } from './session-error-manager';
-
+import { StreamDescriptor, SegmentAcquisition, AdaptationSetType, Abr, AdaptationSet, InternalError } from '@mse-player/core';
+import { EventEmitter } from './event-emitter';
 export class SegmentAcquisitionManager {
-    private readonly errorEmitter = new ErrorEmitter('segmentAcquisition');
+    private readonly errorEmitter = new EventEmitter<InternalError>('segmentAcquisition');
     private currentAquisitionPromise: Promise<SegmentAcquisition> | null;
 
     constructor(private abr: Abr) {}

@@ -1,4 +1,4 @@
-import { SegmentProvider, HttpHandler, SegmentAcquisition } from '@mse-player/core';
+import { SegmentProvider, HttpHandlerBase, SegmentAcquisition } from '@mse-player/core';
 
 export interface TemplateSegmentInfo {
     assetDuration: number;
@@ -9,7 +9,7 @@ export interface TemplateSegmentInfo {
 }
 
 export class TemplateSegmentProvider implements SegmentProvider {
-    constructor(private segmentInfo: TemplateSegmentInfo, private id: string, private httpHandler: HttpHandler) {}
+    constructor(private segmentInfo: TemplateSegmentInfo, private id: string, private httpHandler: HttpHandlerBase) {}
 
     public getInitSegment(): Promise<SegmentAcquisition> {
         const url = `${this.segmentInfo.absoluteUrl}${this.segmentInfo.initTemplate

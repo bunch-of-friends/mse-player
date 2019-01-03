@@ -1,12 +1,12 @@
-import { HttpHandler } from './http-handler';
+import { HttpHandlerBase } from './http-handler';
 import { InternalError } from './internal-error';
 
 export interface StreamTransportCtr {
-    new (httpHandler: HttpHandler): StreamTransport;
+    new (httpHandler: HttpHandlerBase): StreamTransport;
 }
 
 export abstract class StreamTransport {
-    constructor(protected httpHandler: HttpHandler) {}
+    constructor(protected httpHandler: HttpHandlerBase) {}
 
     public abstract getStreamDescriptor(manifestUrl: string): Promise<ManifestAcquisition>;
 }

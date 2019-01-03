@@ -1,16 +1,16 @@
 import { VideoElementWrapper } from './video-element-wrapper';
 import { MediaState } from './session-state-manager';
 import { StreamPosition } from '../api/session';
-import { ErrorEmitter } from './session-error-manager';
 import { Observable } from '@bunch-of-friends/observable';
 import { MediaSourceWrapper } from './media-source-wrapper';
+import { EventEmitter } from './event-emitter';
 import { SegmentAcquisitionManager } from './segment-acqusition-manager';
-import { StreamInfo, AdaptationSetType, Segment } from '@mse-player/core';
+import { StreamInfo, AdaptationSetType, Segment, InternalError } from '@mse-player/core';
 
 export class BufferSizeManager {
     private isStopped = false;
     constructor(
-        private errorEmitter: ErrorEmitter,
+        private errorEmitter: EventEmitter<InternalError>,
         private mediaSourceWrapper: MediaSourceWrapper,
         private segmentAcquisitionManager: SegmentAcquisitionManager,
         private onMediaStateChanged: Observable<MediaState>,
@@ -48,7 +48,7 @@ export class BufferSizeManager {
         }
 
         if (segmentAcquisition.isError && segmentAcquisition.error) {
-            this.errorEmitter.notifyError(segmentAcquisition.error);
+            this.errorEmitter.notifyEvent(segmentAcquisition.error);
             return null;
         }
 

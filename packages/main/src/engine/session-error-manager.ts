@@ -1,16 +1,16 @@
 import { InternalError } from '@mse-player/core';
 import { createObservable, createSubject } from '@bunch-of-friends/observable';
 import { SessionError } from '../api/session';
-
+import { EventEmitter } from './event-emitter';
 export class SessionErrorManager {
-    private readonly errorEmitters = new Array<ErrorEmitter>();
+    private readonly errorEmitters = new Array<EventEmitter<InternalError>>();
     private readonly errorSubject = createSubject<SessionError>();
     public readonly onError = createObservable(this.errorSubject);
 
-    public registerErrorEmitter(errorEmitter: ErrorEmitter) {
-        errorEmitter.onError.register(error => {
+    public registerErrorEmitter(errorEmitter: EventEmitter<InternalError>) {
+        errorEmitter.onEvent.register((error: any) => {
             this.errorSubject.notifyObservers({
-                source: errorEmitter.souceName,
+                source: errorEmitter.sourceName,
                 payload: error.payload,
             });
         });
@@ -18,18 +18,8 @@ export class SessionErrorManager {
     }
 
     public dispose() {
-        this.errorEmitters.forEach(x => x.onError.unregisterAllObservers());
+        this.errorEmitters.forEach(x => x.onEvent.unregisterAllObservers());
         this.errorEmitters.length = 0;
         this.onError.unregisterAllObservers();
-    }
-}
-
-export class ErrorEmitter {
-    private readonly errorSubject = createSubject<InternalError>();
-
-    public readonly onError = createObservable(this.errorSubject);
-    constructor(public readonly souceName: string) {}
-    public notifyError(error: InternalError) {
-        this.errorSubject.notifyObservers(error);
     }
 }
