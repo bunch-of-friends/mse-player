@@ -16,9 +16,13 @@ export class BufferSizeManager {
         private onMediaStateChanged: Observable<MediaState>,
         private onPositionChanged: Observable<StreamPosition>
     ) {
-        this.onMediaStateChanged.register(() => {});
+        this.onMediaStateChanged.register(() => {
+            //
+        });
 
-        this.onPositionChanged.register(() => {});
+        this.onPositionChanged.register(() => {
+            // 
+        });
     }
 
     public start(position: number) {
