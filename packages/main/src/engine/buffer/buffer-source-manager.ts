@@ -1,18 +1,16 @@
-import { MediaState } from '../session/session-state-manager';
-import { StreamPosition } from '../../api/session';
-import { ErrorEmitter } from '../session/session-error-manager';
 import { MediaSourceWrapper } from './media-source-wrapper';
 import { SegmentAcquisitionManager } from '../acquisition/segment-acqusition-manager';
-import { StreamInfo, AdaptationSetType, Segment, AdaptationSet, Representation } from '@mse-player/core';
+import { StreamInfo, Segment, AdaptationSet, InternalError, AdaptationSetType } from '@mse-player/core';
 import { VideoElementWrapper } from '../session/video-element-wrapper';
 import { unwrap } from '../../helpers/unwrap';
+import { EventEmitter } from '../../common/event-emitter';
 
 export class BufferSourceManager {
     private isStopped = false;
     private adapdationSets: Array<AdaptationSet>;
     private mediaSourceWrapper: MediaSourceWrapper | null;
     constructor(
-        private readonly errorEmitter: ErrorEmitter,
+        private readonly errorEmitter: EventEmitter<InternalError>,
         private readonly streamInfo: StreamInfo,
         private readonly segmentAcquisitionManager: SegmentAcquisitionManager,
         private readonly videoElementWrapper: VideoElementWrapper
@@ -31,9 +29,11 @@ export class BufferSourceManager {
     public async initialise(position: number): Promise<void> {
         this.mediaSourceWrapper = await this.createMediaSourceWrapper(this.adapdationSets);
 
-        this.adapdationSets.forEach(a => {
-            this.appendAllSegments(a, position);
-        });
+        const video = unwrap(this.adapdationSets.find(x => x.type === AdaptationSetType.Video));
+        this.appendAllSegments(video, 0);
+        // this.adapdationSets.forEach(a => {
+        //     this.appendAllSegments(a, position);
+        // });
     }
 
     public stop() {
@@ -88,7 +88,7 @@ export class BufferSourceManager {
         }
 
         if (result.acquisition.isError && result.acquisition.error) {
-            this.errorEmitter.notifyError(result.acquisition.error);
+            this.errorEmitter.notifyEvent(result.acquisition.error);
             return null;
         }
 

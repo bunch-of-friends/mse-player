@@ -1,5 +1,7 @@
-import { Analytics, HttpHandler as IHttpHandler } from '@mse-player/core';
-export class HttpHandler extends IHttpHandler {
+import { AnalyticsData } from '@mse-player/core';
+import { EventEmitter } from './event-emitter';
+export class HttpHandler {
+    constructor(private analyticsEmitter: EventEmitter<AnalyticsData>) {}
     public getXml(url: string): Promise<Document | null> {
         const onLoadHandler = (xhrResponse: XMLHttpRequest) => xhrResponse.responseXML;
         return this.sendXhr({

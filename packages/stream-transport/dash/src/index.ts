@@ -1,4 +1,4 @@
-import { StreamTransport, ManifestAcquisition } from '@mse-player/core';
+import { StreamTransport, ManifestAcquisition, XpathHelper } from '@mse-player/core';
 import { ManifestParser } from './manifest-parser';
 
 export class DashStreamTransport extends StreamTransport {

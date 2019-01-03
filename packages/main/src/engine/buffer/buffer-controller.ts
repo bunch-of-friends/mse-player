@@ -1,11 +1,11 @@
-import { StreamInfo } from '@mse-player/core';
+import { StreamInfo, InternalError } from '@mse-player/core';
 import { VideoElementWrapper } from '../session/video-element-wrapper';
-import { ErrorEmitter } from '../session/session-error-manager';
 import { SegmentAcquisitionManager } from '../acquisition/segment-acqusition-manager';
 import { BufferSourceManager } from './buffer-source-manager';
+import { EventEmitter } from '../../common/event-emitter';
 
 export class BufferController {
-    private readonly errorEmitter = new ErrorEmitter('bufferController');
+    private readonly errorEmitter = new EventEmitter<InternalError>('bufferController');
     private isInErrorState = false;
     private bufferSourceManager: BufferSourceManager | null;
 
@@ -19,7 +19,7 @@ export class BufferController {
         return this.bufferSourceManager.initialise(startingPosition);
     }
 
-    public getErrorEmitter(): ErrorEmitter {
+    public getErrorEmitter(): EventEmitter<InternalError> {
         return this.errorEmitter;
     }
 
