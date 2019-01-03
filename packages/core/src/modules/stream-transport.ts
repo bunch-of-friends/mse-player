@@ -127,12 +127,11 @@ export enum AdaptationSetType {
 export interface AdaptationSet {
     type: AdaptationSetType;
     mimeType: string;
-    representations: Array<Representation>;
+    representations: Array<VideoRepresentation | AudioRepresentation>;
 }
 
 export interface Representation {
     id: string;
-
     codecs: string;
     bandwidth: number;
     segmentProvider: SegmentProvider;
