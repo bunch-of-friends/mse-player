@@ -8,5 +8,5 @@ export abstract class Abr {
     constructor(protected streamDescriptor: StreamDescriptor) {}
     public abstract getNextSegmentRepresentation(adaptationSet: AdaptationSet): Representation;
 
-    public abstract getAdaptationSet(adaptationType: AdaptationSetType): AdaptationSet | null;
+    public abstract getAdaptationSets(): Array<AdaptationSet>;
 }

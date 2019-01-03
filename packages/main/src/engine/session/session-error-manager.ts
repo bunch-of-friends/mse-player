@@ -1,6 +1,6 @@
 import { InternalError } from '@mse-player/core';
 import { createObservable, createSubject } from '@bunch-of-friends/observable';
-import { SessionError } from '../api/session';
+import { SessionError } from '../../api/session';
 
 export class SessionErrorManager {
     private readonly errorEmitters = new Array<ErrorEmitter>();

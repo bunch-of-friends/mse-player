@@ -1,12 +1,12 @@
 import { StreamTransport } from '@mse-player/core';
-import { DependencyContainer } from '../dependency/dependency-container';
-import { SessionOptions, SessionState } from '../api/session';
-import { BufferController } from './buffer-controller';
+import { DependencyContainer } from '../../dependency/dependency-container';
+import { SessionOptions, SessionState } from '../../api/session';
+import { BufferController } from '../buffer/buffer-controller';
 import { VideoElementWrapper } from './video-element-wrapper';
 import { SessionErrorManager } from './session-error-manager';
 import { SessionStateManager } from './session-state-manager';
-import { ManifestAcquisitionManager } from './manifest-acquisition-manager';
-import { SegmentAcquisitionManager } from './segment-acqusition-manager';
+import { ManifestAcquisitionManager } from '../acquisition/manifest-acquisition-manager';
+import { SegmentAcquisitionManager } from '../acquisition/segment-acqusition-manager';
 
 export class SessionController {
     private readonly bufferController: BufferController;

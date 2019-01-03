@@ -1,5 +1,5 @@
 import { Observable } from '@bunch-of-friends/observable';
-import { SessionController } from '../engine/session-controller';
+import { SessionController } from '../engine/session/session-controller';
 
 export function createSession(sessionController: SessionController): Session {
     return {

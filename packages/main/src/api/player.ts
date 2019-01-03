@@ -1,4 +1,4 @@
-import { PlayerController } from '../engine/player-controller';
+import { PlayerController } from '../engine/player/player-controller';
 import { SessionOptions, Session } from './session';
 
 export function createPlayer(videoElementContainer: HTMLElement): Player {

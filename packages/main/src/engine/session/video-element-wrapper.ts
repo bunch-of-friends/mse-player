@@ -1,5 +1,5 @@
 import { createObservable, createSubject } from '@bunch-of-friends/observable';
-import { StreamPosition } from '../api/session';
+import { StreamPosition } from '../../api/session';
 import { ErrorEmitter } from './session-error-manager';
 import { MediaState } from './session-state-manager';
 
@@ -11,6 +11,7 @@ export class VideoElementWrapper {
     public readonly onMediaStateChanged = createObservable(this.mediaStateSubject);
 
     constructor(private videoElement: HTMLVideoElement) {
+        (window as any).video = videoElement;
         this.errorEmitter = new VideoElementErrorEmitter(videoElement);
 
         this.videoElement.ontimeupdate = () => {
@@ -79,6 +80,10 @@ export class VideoElementWrapper {
 
     public dispose(): void {
         this.errorEmitter.dispose();
+    }
+
+    public getMediaError(): MediaError | null {
+        return this.videoElement.error;
     }
 }
 

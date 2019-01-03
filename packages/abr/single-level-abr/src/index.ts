@@ -5,8 +5,7 @@ export class SingleLevelAbr extends Abr {
         return adaptationSet.representations[0];
     }
 
-    public getAdaptationSet(adaptationType: AdaptationSetType): AdaptationSet | null {
-        const adapdationSet = this.streamDescriptor.adaptationSets.find(x => x.type === adaptationType);
-        return adapdationSet || null;
+    public getAdaptationSets(): Array<AdaptationSet> {
+        return this.streamDescriptor.adaptationSets;
     }
 }

@@ -1,9 +1,9 @@
-import { createSession, SessionState } from '../api/session';
-import { Session, SessionOptions } from '../api/session';
-import { SessionController } from './session-controller';
-import { VideoElementWrapper } from './video-element-wrapper';
-import { DependencyContainer } from '../dependency/dependency-container';
-import { createVideoElement } from '../helpers/dom-helper';
+import { createSession, SessionState } from '../../api/session';
+import { Session, SessionOptions } from '../../api/session';
+import { SessionController } from '../session/session-controller';
+import { VideoElementWrapper } from '../session/video-element-wrapper';
+import { DependencyContainer } from '../../dependency/dependency-container';
+import { createVideoElement } from '../../helpers/dom-helper';
 
 export class PlayerController {
     private sessionController: SessionController | null;

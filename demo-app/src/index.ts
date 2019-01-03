@@ -14,7 +14,7 @@ function init() {
 
     wireUpButtons(() => {
         const s = player.startSession({
-            url: 'http://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
+            url: (document.getElementById('manifest-url') as HTMLInputElement).value,
             autoPlay: true,
             startingPosition: 0,
         });
@@ -25,7 +25,7 @@ function init() {
 
 function wireUpEvents(s: mse.Session) {
     s.onError.register(e => {
-        appendLogLine(`ERROR >> source: ${e.source}, error: ${e.payload}`);
+        appendLogLine(`ERROR >> source: ${e.source}, error: ${JSON.stringify(e.payload)}`);
     });
     s.onPositionUpdate.register(e => {
         infoContainer.textContent = `Current time: ${e.currentTime}`;

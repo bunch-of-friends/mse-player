@@ -1,8 +1,8 @@
 import { StreamDescriptor, StreamTransport } from '@mse-player/core';
-import { DependencyContainer } from '../dependency/dependency-container';
-import { SessionStateManager } from './session-state-manager';
-import { ErrorEmitter } from './session-error-manager';
-import { unwrap } from '../helpers/unwrap';
+import { DependencyContainer } from '../../dependency/dependency-container';
+import { SessionStateManager } from '../session/session-state-manager';
+import { ErrorEmitter } from '../session/session-error-manager';
+import { unwrap } from '../../helpers/unwrap';
 
 export class ManifestAcquisitionManager {
     private readonly errorEmitter = new ErrorEmitter('manifestAcquisition');
