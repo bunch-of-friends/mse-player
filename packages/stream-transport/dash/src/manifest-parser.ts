@@ -1,46 +1,107 @@
-import { ManifestAcquisition, AdaptationSetType, HttpHandler } from '@mse-player/core';
+import { ManifestAcquisition, AdaptationSetType, HttpHandler, AdaptationSet, VideoRepresentation, AudioRepresentation } from '@mse-player/core';
 import { TemplateSegmentProvider } from './template-segment-provider';
 
 const iso8601DurationRegex = /P(?:([0-9]+)Y)?(?:([0-9]+)M)?(?:([0-9]+)D)?T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+(?:\.[0-9]+)?)?S)?/;
+const TYPE_EXPRESSION = '*/@type';
+const DURATION_EXPRESSION = '*/@mediaPresentationDuration';
+const ADAPTATION_SET_EXPRESSION = '*//xmlns:AdaptationSet';
+const CONTENT_TYPE_EXPRESSION = '@contentType';
+const MIME_TYPES_EXPRESSION = '@mimeType';
+const REPRESENTATION_EXPRESSION = 'xmlns:Representation';
+const CODECS_EXPRESSION = '@codecs';
+const ID_EXPRESSION = '@id';
+const BANDWIDTH_EXPRESSION = '@bandwidth';
+const WIDTH_EXPRESSION = '@width';
+const HEIGHT_EXPRESSION = '@height';
+const FRAME_RATE_EXPRESSION = '@frameRate';
+const SAMPLING_RATE_EXPRESSION = '@audioSamplingRate';
+const AUDIO_CHANNELS_EXPRESSION = 'xmlns:AudioChannelConfiguration/@value';
 
 export class ManifestParser {
-    private defaultStreamDescriptor = {
-        streamInfo: {
-            isLive: false,
-            duration: 634.566,
-        },
-        adaptationSets: [
-            {
-                type: AdaptationSetType.Video,
-                mimeType: 'video/mp4',
-                representations: [
-                    {
-                        codecs: 'avc1.640028',
-                        id: 'bbb_30fps_1920x1080_8000k',
-                        bandwidth: 9914554,
-                        segmentProvider: new TemplateSegmentProvider(634.566, this.httpHandler),
-                    },
-                ],
-            },
-        ],
-    };
-
     constructor(private httpHandler: HttpHandler) {}
 
     public getStreamDescriptor(xml: Document): ManifestAcquisition {
-        const xmlns = this.getNamespace(xml);
-        const typeExpression = '*/@type';
-        const durationExpression = '*/@mediaPresentationDuration';
-        const periodExpression = '//xmlns:Period';
+        const namespace = this.getNamespace(xml);
+        const streamInfo = this.evaluateXpathAttributes(this.concatenateXpathExpressions(TYPE_EXPRESSION, DURATION_EXPRESSION), xml, xml, namespace);
 
-        const mpdResult = xml.evaluate(
-            this.concatenateXpathExpressions(typeExpression, durationExpression, periodExpression),
-            xml,
+        const isLive = streamInfo[0] === 'dynamic';
+        const duration = (streamInfo[1] && this.getSecondsFromManifestTimeValue(streamInfo[1])) || 0;
+
+        const adaptationSetNodes = this.evaluateXpathNodes(ADAPTATION_SET_EXPRESSION, xml, xml, namespace);
+        const adaptationSets: Array<AdaptationSet> = [];
+        adaptationSetNodes.forEach(x => adaptationSets.push(this.parseAdaptationSet(x, xml, namespace, duration)));
+
+        const manifestAcquisition = {
+            isSuccess: true,
+            streamDescriptor: {
+                streamInfo: {
+                    isLive,
+                    duration,
+                },
+                adaptationSets,
+            },
+        };
+
+        console.log('manifestAcquision:', manifestAcquisition); // tslint:disable-line
+        return manifestAcquisition;
+    }
+
+    private parseAdaptationSet(adaptationSetNode: Node, document: Document, namespace: string | null, duration: number) {
+        const type = this.evaluateXpathAttributes(CONTENT_TYPE_EXPRESSION, document, adaptationSetNode, namespace)[0] || '';
+        const representationNodes = this.evaluateXpathNodes(REPRESENTATION_EXPRESSION, document, adaptationSetNode, namespace);
+        const representations: Array<VideoRepresentation | AudioRepresentation> = [];
+        representationNodes.forEach(y => representations.push(this.parseRepresentation(y, document, namespace, duration, type)));
+        return {
+            type: type as AdaptationSetType,
+            mimeType: this.evaluateXpathAttributes(MIME_TYPES_EXPRESSION, document, adaptationSetNode, namespace)[0] || '',
+            representations: representations,
+        };
+    }
+
+    private parseRepresentation(representationNode: Node, document: Document, namespace: string | null, duration: number, type: string) {
+        const representation = {
+            codecs: this.evaluateXpathAttributes(CODECS_EXPRESSION, document, representationNode, namespace)[0] || '',
+            id: this.evaluateXpathAttributes(ID_EXPRESSION, document, representationNode, namespace)[0] || '',
+            bandwidth: parseInt(this.evaluateXpathAttributes(BANDWIDTH_EXPRESSION, document, representationNode, namespace)[0], 10) || 0,
+            segmentProvider: new TemplateSegmentProvider(duration, this.httpHandler),
+        };
+
+        if (type === AdaptationSetType.Video) {
+            return {
+                ...representation,
+                width: parseInt(this.evaluateXpathAttributes(WIDTH_EXPRESSION, document, representationNode, namespace)[0], 10) || 0,
+                height: parseInt(this.evaluateXpathAttributes(HEIGHT_EXPRESSION, document, representationNode, namespace)[0], 10) || 0,
+                frameRate: parseInt(this.evaluateXpathAttributes(FRAME_RATE_EXPRESSION, document, representationNode, namespace)[0], 10) || 0,
+            };
+        } else {
+            return {
+                ...representation,
+                channels: parseInt(this.evaluateXpathAttributes(AUDIO_CHANNELS_EXPRESSION, document, representationNode, namespace)[0], 10) || 0,
+                samplingRate: parseInt(this.evaluateXpathAttributes(SAMPLING_RATE_EXPRESSION, document, representationNode, namespace)[0], 10) || 0,
+            };
+        }
+    }
+
+    private evaluateXpathAttributes(expression: string, xml: Document, rootNode: Node, namespace: string | null): Array<string> {
+        const nodes = this.evaluateXpathNodes(expression, xml, rootNode, namespace);
+        const result: Array<string> = [];
+        nodes.forEach(x => {
+            if (x.nodeValue) {
+                result.push(x.nodeValue);
+            }
+        });
+
+        return result;
+    }
+
+    private evaluateXpathNodes(expression: string, xml: Document, rootNode: Node, namespace: string | null): Array<Node> {
+        const res = xml.evaluate(
+            expression,
+            rootNode,
             prefix => {
-                // tslint:enable
                 switch (prefix) {
                     case 'xmlns':
-                        return xmlns;
+                        return namespace;
                     default:
                         return null;
                 }
@@ -49,32 +110,14 @@ export class ManifestParser {
             null
         );
 
-        const mpdTypeNode = mpdResult.iterateNext();
-        const mpdDurationNode = mpdResult.iterateNext();
-        const periodNode = mpdResult.iterateNext();
+        let value = res.iterateNext();
+        const result = [];
+        while (value) {
+            result.push(value);
+            value = res.iterateNext();
+        }
 
-        const isLive = (mpdTypeNode && mpdTypeNode.nodeValue) === 'dynamic';
-        const duration = (mpdDurationNode && mpdDurationNode.nodeValue && this.getSecondsFromManifestTimeValue(mpdDurationNode.nodeValue)) || 0;
-        // tslint:disable no-console
-        console.log('!!!!!!!!!!!!!!! LOOK BELOW !!!!!!!!!!!!!!!');
-        console.log('isLive', isLive);
-        console.log('duration', duration);
-        console.log('period node', periodNode);
-        console.log('!!!!!!!!!!!!!!! LOOK ABOVE !!!!!!!!!!!!!!!');
-        // tslint:enable
-
-        const streamDescriptor = {
-            ...this.defaultStreamDescriptor,
-            streamInfo: {
-                isLive,
-                duration,
-            },
-        };
-
-        return {
-            isSuccess: true,
-            streamDescriptor,
-        };
+        return result;
     }
 
     private concatenateXpathExpressions(...expressions: Array<string>): string {
