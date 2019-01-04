@@ -7,23 +7,26 @@ import { SessionErrorManager } from './session-error-manager';
 import { SessionStateManager } from './session-state-manager';
 import { ManifestAcquisitionManager } from '../acquisition/manifest-acquisition-manager';
 import { SegmentAcquisitionManager } from '../acquisition/segment-acqusition-manager';
+import { AnalyticsManager } from './analytics-manager';
+import { HttpHandler } from '../../common/http-handler';
 
 export class SessionController {
     private readonly bufferController: BufferController;
     private readonly errorManager = new SessionErrorManager();
     private readonly stateManager = new SessionStateManager(this.videoElementWrapper);
+    private readonly analyticsManager = new AnalyticsManager(this.videoElementWrapper);
     private readonly manifestAcquisitionManager: ManifestAcquisitionManager;
     public readonly onError = this.errorManager.onError;
     public readonly onStateChanged = this.stateManager.onStateChanged;
     public readonly onPositionUpdate = this.videoElementWrapper.onPositionUpdate;
 
-    constructor(private readonly videoElementWrapper: VideoElementWrapper, streamTransport: StreamTransport) {
+    constructor(private readonly videoElementWrapper: VideoElementWrapper, streamTransport: StreamTransport, private httpHandler: HttpHandler) {
         this.manifestAcquisitionManager = new ManifestAcquisitionManager(streamTransport);
         this.bufferController = new BufferController(this.videoElementWrapper);
         this.errorManager.onError.register(() => {
             this.stop();
         });
-
+        this.analyticsManager.registerAnalyticsEmitter(this.httpHandler.getAnalyticsEmitter());
         this.errorManager.registerErrorEmitter(videoElementWrapper.getErrorEmitter());
         this.errorManager.registerErrorEmitter(this.manifestAcquisitionManager.getErrorEmitter());
         this.errorManager.registerErrorEmitter(this.bufferController.getErrorEmitter());

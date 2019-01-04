@@ -86,6 +86,12 @@ export class VideoElementWrapper {
     public getMediaError(): MediaError | null {
         return this.videoElement.error;
     }
+
+    public getVideoPlaybackQuality(): VideoPlaybackQuality {
+        console.dir(this.videoElement);
+        return {} as VideoPlaybackQuality;
+        // return this.videoElement.getVideoPlaybackQuality();
+    }
 }
 
 class VideoElementErrorEmitter extends EventEmitter<InternalError> {
