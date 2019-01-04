@@ -1,16 +1,22 @@
 export class XpathHelper {
     constructor(private document: Document, private namespace: string | null) {}
 
-    public getAttributes(expression: string, rootNode: Node): Array<string> {
+    public getAttributes(expression: string, rootNode: Node): { [key: string]: string } {
         const nodes = this.getNodes(expression, rootNode);
-        const result: Array<string> = [];
+        const result: { [key: string]: string } = {};
         nodes.forEach(x => {
-            if (x.nodeValue) {
-                result.push(x.nodeValue);
-            }
+            result[x.nodeName] = x.nodeValue || '';
         });
-
         return result;
+    }
+
+    public getSingleAttribute(expression: string, rootNode: Node): string {
+        const nodes = this.getNodes(expression, rootNode);
+        if (nodes.length === 0) {
+            return '';
+        } else {
+            return nodes[0].nodeValue || '';
+        }
     }
 
     public getNodes(expression: string, rootNode: Node): Array<Node> {

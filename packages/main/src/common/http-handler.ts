@@ -34,7 +34,7 @@ export class HttpHandler {
             xhr.onload = function() {
                 resolve(options.onLoadHandler(xhr));
             };
-            xhr.send();
+            xhr.send(null);
         });
     }
 }

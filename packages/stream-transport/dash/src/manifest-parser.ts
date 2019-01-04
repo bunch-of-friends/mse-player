@@ -14,8 +14,8 @@ export class ManifestParser {
         const streamInfoExpression = this.xpathHelper.concatenateExpressions(Expressions.TYPE, Expressions.DURATION);
         const streamInfo = this.xpathHelper.getAttributes(streamInfoExpression, xml);
 
-        const isLive = streamInfo[0] === 'dynamic';
-        const duration = (streamInfo[1] && this.getSecondsFromManifestTimeValue(streamInfo[1])) || 0;
+        const isLive = streamInfo.type === 'dynamic';
+        const duration = this.getSecondsFromManifestTimeValue(streamInfo.mediaPresentationDuration);
         const absoluteUrl = xml.URL.replace(xml.URL.substring(xml.URL.lastIndexOf('/') + 1), '');
 
         const adaptationSetNodes = this.xpathHelper.getNodes(Expressions.ADAPTATION_SET, xml);
@@ -38,41 +38,41 @@ export class ManifestParser {
     }
 
     private parseAdaptationSet(adaptationSetNode: Node, assetDuration: number, absoluteUrl: string) {
-        const type = this.xpathHelper.getAttributes(Expressions.CONTENT_TYPE, adaptationSetNode)[0] || '';
-        const initTemplate = this.xpathHelper.getAttributes(Expressions.INIT_TEMPLATE, adaptationSetNode)[0] || '';
-        const mediaTemplate = this.xpathHelper.getAttributes(Expressions.MEDIA_TEMPLATE, adaptationSetNode)[0] || '';
+        const type = this.xpathHelper.getSingleAttribute(Expressions.CONTENT_TYPE, adaptationSetNode);
+        const initTemplate = this.xpathHelper.getSingleAttribute(Expressions.INIT_TEMPLATE, adaptationSetNode);
+        const mediaTemplate = this.xpathHelper.getSingleAttribute(Expressions.MEDIA_TEMPLATE, adaptationSetNode);
         const representationNodes = this.xpathHelper.getNodes(Expressions.REPRESENTATION, adaptationSetNode);
         const representations: Array<Representation> = [];
         const segmentInfo = { assetDuration, initTemplate, mediaTemplate, type, absoluteUrl };
         representationNodes.forEach(y => representations.push(this.parseRepresentation(y, segmentInfo)));
         return {
             type: type as AdaptationSetType,
-            mimeType: this.xpathHelper.getAttributes(Expressions.MIME_TYPES, adaptationSetNode)[0] || '',
+            mimeType: this.xpathHelper.getSingleAttribute(Expressions.MIME_TYPES, adaptationSetNode),
             representations: representations,
         };
     }
 
     private parseRepresentation(representationNode: Node, segmentInfo: TemplateSegmentInfo) {
-        const id = this.xpathHelper.getAttributes(Expressions.ID, representationNode)[0] || '';
+        const id = this.xpathHelper.getSingleAttribute(Expressions.ID, representationNode);
         const representation = {
-            codecs: this.xpathHelper.getAttributes(Expressions.CODECS, representationNode)[0] || '',
+            codecs: this.xpathHelper.getSingleAttribute(Expressions.CODECS, representationNode),
             id: id,
-            bandwidth: parseInt(this.xpathHelper.getAttributes(Expressions.BANDWIDTH, representationNode)[0], 10) || 0,
+            bandwidth: parseInt(this.xpathHelper.getSingleAttribute(Expressions.BANDWIDTH, representationNode), 10) || 0,
             segmentProvider: new TemplateSegmentProvider(segmentInfo, id, this.httpHandler),
         };
 
         if (segmentInfo.type === AdaptationSetType.Video) {
             return {
                 ...representation,
-                width: parseInt(this.xpathHelper.getAttributes(Expressions.WIDTH, representationNode)[0], 10) || 0,
-                height: parseInt(this.xpathHelper.getAttributes(Expressions.HEIGHT, representationNode)[0], 10) || 0,
-                frameRate: parseInt(this.xpathHelper.getAttributes(Expressions.FRAME_RATE, representationNode)[0], 10) || 0,
+                width: parseInt(this.xpathHelper.getSingleAttribute(Expressions.WIDTH, representationNode), 10) || 0,
+                height: parseInt(this.xpathHelper.getSingleAttribute(Expressions.HEIGHT, representationNode), 10) || 0,
+                frameRate: parseInt(this.xpathHelper.getSingleAttribute(Expressions.FRAME_RATE, representationNode), 10) || 0,
             };
         } else {
             return {
                 ...representation,
-                channels: parseInt(this.xpathHelper.getAttributes(Expressions.AUDIO_CHANNELS, representationNode)[0], 10) || 0,
-                samplingRate: parseInt(this.xpathHelper.getAttributes(Expressions.SAMPLING_RATE, representationNode)[0], 10) || 0,
+                channels: parseInt(this.xpathHelper.getSingleAttribute(Expressions.AUDIO_CHANNELS, representationNode), 10) || 0,
+                samplingRate: parseInt(this.xpathHelper.getSingleAttribute(Expressions.SAMPLING_RATE, representationNode), 10) || 0,
             };
         }
     }
