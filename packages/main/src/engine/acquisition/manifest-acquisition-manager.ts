@@ -1,19 +1,18 @@
-import { InternalError, StreamDescriptor, StreamTransport } from '@mse-player/core';
+import { InternalError, StreamDescriptor, StreamTransport, unwrap } from '@mse-player/core';
 import { EventEmitter } from '../../common/event-emitter';
-import { unwrap } from '../../helpers/unwrap';
 
 export class ManifestAcquisitionManager {
     private readonly errorEmitter = new EventEmitter<InternalError>('manifestAcquisition');
 
     constructor(private streamTransport: StreamTransport) {}
     public async loadStreamDescriptor(manifestUrl: string): Promise<StreamDescriptor> {
-        const manifestAcquisition = await this.streamTransport.getStreamDescriptor(manifestUrl);
-        if (!manifestAcquisition.isSuccess || !manifestAcquisition.streamDescriptor) {
-            this.errorEmitter.notifyEvent(unwrap(manifestAcquisition.error));
+        const acqusition = await this.streamTransport.getStreamDescriptor(manifestUrl);
+        if (!acqusition.isSuccess) {
+            this.errorEmitter.notifyEvent(acqusition.error);
             return Promise.reject();
+        } else {
+            return acqusition.payload;
         }
-
-        return manifestAcquisition.streamDescriptor;
     }
 
     public getErrorEmitter(): EventEmitter<InternalError> {

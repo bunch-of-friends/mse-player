@@ -1,5 +1,6 @@
 import { HttpHandlerBase } from './http-handler';
 import { InternalError } from './internal-error';
+import { Acquisition } from './acquisition';
 
 export interface StreamTransportCtr {
     new (httpHandler: HttpHandlerBase): StreamTransport;
@@ -8,13 +9,7 @@ export interface StreamTransportCtr {
 export abstract class StreamTransport {
     constructor(protected httpHandler: HttpHandlerBase) {}
 
-    public abstract getStreamDescriptor(manifestUrl: string): Promise<ManifestAcquisition>;
-}
-
-export interface ManifestAcquisition {
-    isSuccess: boolean;
-    streamDescriptor?: StreamDescriptor;
-    error?: InternalError;
+    public abstract getStreamDescriptor(manifestUrl: string): Promise<Acquisition<StreamDescriptor>>;
 }
 
 export interface StreamDescriptor {
@@ -24,99 +19,16 @@ export interface StreamDescriptor {
 
 export interface StreamInfo {
     isLive: boolean;
-    duration: number;
-}
-
-export interface SegmentProvider {
-    getInitSegment(): Promise<SegmentAcquisition>;
-    getNextSegment(nextSegmentStartTime: number): Promise<SegmentAcquisition>;
+    duration: number | null;
 }
 
 export interface Segment {
-    data: ArrayBuffer;
-    length: number;
-    segmentEndTime: number;
-}
-
-export class SegmentAcquisition {
-    public static success(segment: Segment): SegmentAcquisition {
-        return {
-            isNotAvailable: false,
-            isSuccess: true,
-            isError: false,
-            segment,
-        };
-    }
-
-    public static error(error: InternalError): SegmentAcquisition {
-        return {
-            isNotAvailable: false,
-            isSuccess: false,
-            isError: true,
-            error,
-        };
-    }
-
-    public static notAvailable(): SegmentAcquisition {
-        return {
-            isNotAvailable: true,
-            isSuccess: false,
-            isError: false,
-        };
-    }
-
-    public readonly isNotAvailable: boolean;
-    public readonly isSuccess: boolean;
-    public readonly isError: boolean;
-
-    public segment?: Segment;
-    public error?: InternalError;
+    bytes: ArrayBuffer;
 }
 
 export interface SegmentProvider {
-    getInitSegment(): Promise<SegmentAquisition>;
-    getNextSegment(nextSegmentStartTime: number): Promise<SegmentAquisition>;
-}
-
-export interface Segment {
-    data: ArrayBuffer;
-    length: number;
-    segmentEndTime: number;
-}
-
-export class SegmentAquisition {
-    public static success(segment: Segment): SegmentAquisition {
-        return {
-            isNotAvailable: false,
-            isSuccess: true,
-            isError: false,
-            segment,
-        };
-    }
-
-    public static error(error: InternalError): SegmentAquisition {
-        return {
-            isNotAvailable: false,
-            isSuccess: false,
-            isError: true,
-            error,
-        };
-    }
-
-    public static notAvailable(): SegmentAquisition {
-        return {
-            isNotAvailable: true,
-            isSuccess: false,
-            isError: false,
-        };
-    }
-
-    public readonly isNotAvailable: boolean;
-    public readonly isSuccess: boolean;
-    public readonly isError: boolean;
-
-    public segment?: Segment;
-    public error?: InternalError;
+    getInitSegment(): Promise<Acquisition<Segment>>;
+    getNextSegment(lastSegmentEndTime: number): Promise<Acquisition<Segment>>;
 }
 
 export enum AdaptationSetType {

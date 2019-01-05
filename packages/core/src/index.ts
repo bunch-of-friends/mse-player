@@ -5,3 +5,5 @@ export * from './modules/abr';
 export * from './modules/analytics-manager';
 export * from './modules/internal-error';
 export * from './helpers/xpath-helper';
+export * from './modules/acquisition';
+export * from './helpers/unwrap';

@@ -1,6 +1,6 @@
 import { createSubject, createObservable, Observable } from '@bunch-of-friends/observable';
 import { SessionState } from '../../api/session';
-import { StreamDescriptor, ManifestAcquisition } from '@mse-player/core';
+import { StreamDescriptor } from '@mse-player/core';
 import { VideoElementWrapper } from './video-element-wrapper';
 
 export class SessionStateManager {

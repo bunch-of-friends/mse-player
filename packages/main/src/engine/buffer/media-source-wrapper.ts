@@ -1,14 +1,13 @@
-import { StreamInfo, AdaptationSet, AdaptationSetType, Segment, Representation, InternalError } from '@mse-player/core';
+import { StreamInfo, AdaptationSet, AdaptationSetType, Segment, Representation, InternalError, unwrap } from '@mse-player/core';
 import { createSubject, createObservable } from '@bunch-of-friends/observable';
 import { getMimeCodec } from '../../helpers/mime-helper';
 import { EventEmitter } from '../../common/event-emitter';
-import { unwrap } from '../../helpers/unwrap';
 
 export class MediaSourceWrapper {
     private isDisposed = false;
     private bufferOpenSubject = createSubject();
     private mediaSource = new MediaSource();
-    private sourceBuffers = new Map<AdaptationSet, SourceBufferRecord>();
+    private sourceBuffersMap = new Map<AdaptationSet, SourceBufferRecord>();
     public onBufferOpen = createObservable(this.bufferOpenSubject);
 
     constructor(private readonly errorEmitter: EventEmitter<InternalError>, private readonly streamInfo: StreamInfo) {
@@ -42,26 +41,27 @@ export class MediaSourceWrapper {
                 return;
             }
 
-            this.sourceBuffers.set(r.adaptationSet, {
+            this.sourceBuffersMap.set(r.adaptationSet, {
                 currentCodec: representationMimeCodec,
                 sourceBuffer: sourceBufferCreationResult.sourceBuffer,
+                currentAppendPromise: null,
                 listeners: sourceBufferCreationResult.listeners,
             });
         }
     }
 
-    public appendSegment(adaptationSet: AdaptationSet, representation: Representation, segment: Segment): void {
+    public async appendSegment(adaptationSet: AdaptationSet, representation: Representation, segment: Segment): Promise<void> {
         if (this.isDisposed) {
-            return;
+            return Promise.reject();
         }
 
         if (this.mediaSource.readyState !== 'open') {
             this.errorEmitter.notifyEvent({ payload: 'media source not open' });
             this.dispose();
-            return;
+            return Promise.reject();
         }
 
-        const sourceBufferRecord = unwrap(this.sourceBuffers.get(adaptationSet));
+        const sourceBufferRecord = unwrap(this.sourceBuffersMap.get(adaptationSet));
         const mimeCodec = getMimeCodec(adaptationSet, representation);
 
         if (sourceBufferRecord.currentCodec !== mimeCodec) {
@@ -69,10 +69,25 @@ export class MediaSourceWrapper {
             (sourceBufferRecord.sourceBuffer as any).changeType(mimeCodec);
         }
 
-        if (sourceBufferRecord.sourceBuffer.updating) {
-            throw 'source buffer is currently updating';
+        if (sourceBufferRecord.currentAppendPromise) {
+            await sourceBufferRecord.currentAppendPromise;
         }
-        sourceBufferRecord.sourceBuffer.appendBuffer(segment.data);
+
+        sourceBufferRecord.currentAppendPromise = new Promise(resolve => {
+            if (sourceBufferRecord.sourceBuffer.updating) {
+                throw 'source buffer is currently updating';
+            }
+
+            const onUpdateEnd = () => {
+                sourceBufferRecord.sourceBuffer.removeEventListener('updateend', onUpdateEnd);
+                resolve();
+            };
+
+            sourceBufferRecord.sourceBuffer.addEventListener('updateend', onUpdateEnd);
+            sourceBufferRecord.sourceBuffer.appendBuffer(segment.bytes);
+        });
+
+        return sourceBufferRecord.currentAppendPromise;
     }
 
     public dispose() {
@@ -81,7 +96,7 @@ export class MediaSourceWrapper {
         this.mediaSource.removeEventListener('sourcended', this.onMediaSourceEnded);
         this.mediaSource.removeEventListener('sourceclose', this.onMediaSourceClosed);
 
-        this.sourceBuffers.forEach(s => {
+        this.sourceBuffersMap.forEach(s => {
             if (s.sourceBuffer != null) {
                 for (let i = 0; i < s.listeners.length; i++) {
                     const listener = s.listeners[i];
@@ -90,11 +105,102 @@ export class MediaSourceWrapper {
             }
         });
 
-        this.sourceBuffers.clear();
+        this.sourceBuffersMap.clear();
+    }
+
+    public getBufferInfo(currentTime: number): BufferInfo {
+        // find active buffers
+        const activeSourceBuffers = new Array<SourceBuffer>();
+        for (let i = 0; i < this.mediaSource.sourceBuffers.length; i++) {
+            activeSourceBuffers.push(this.mediaSource.sourceBuffers[i]);
+        }
+
+        // for each active buffer calculate current window
+        const activeAdaptationSets = activeSourceBuffers
+            .map(x => {
+                return {
+                    sourceBuffer: x,
+                    bufferWindow: this.calculateCurrentWindow(x.buffered, currentTime),
+                };
+            })
+            // for each active buffer find adaptation set
+            .map(x => {
+                return {
+                    adaptationSet: this.findAdapdationSet(x.sourceBuffer),
+                    bufferWindow: x.bufferWindow,
+                };
+            });
+
+        return {
+            duration: this.mediaSource.duration,
+            currentBufferedWindow: this.calculateCurrentBufferWindow(activeAdaptationSets.map(x => x.bufferWindow)),
+            activeAdaptationSets,
+        };
+    }
+
+    private calculateCurrentBufferWindow(activeBuffersWindows: Array<BufferWindow>): BufferWindow {
+        let start = 0;
+        let end = Number.MAX_VALUE;
+
+        activeBuffersWindows.forEach(x => {
+            if (x.start > start) {
+                start = x.start;
+            }
+
+            if (x.end < end) {
+                end = x.end;
+            }
+        });
+
+        return {
+            start,
+            end,
+        };
+    }
+
+    private findAdapdationSet(sourceBuffer: SourceBuffer): AdaptationSet {
+        let result: AdaptationSet | null = null;
+        this.sourceBuffersMap.forEach((r, a) => {
+            if (result) {
+                return;
+            }
+
+            if (r.sourceBuffer === sourceBuffer) {
+                result = a;
+            }
+        });
+
+        if (!result) {
+            throw 'adaptation set not found for sourceBuffer: ' + sourceBuffer;
+        }
+
+        return result;
+    }
+
+    private calculateCurrentWindow(timeRanges: TimeRanges, currentTime: number): BufferWindow {
+        let length = timeRanges.length;
+        while (length-- > 0) {
+            const index = length;
+            const start = timeRanges.start(index);
+            const end = timeRanges.end(index);
+            if (start <= currentTime && currentTime <= end) {
+                return {
+                    start,
+                    end,
+                };
+            }
+        }
+
+        return {
+            start: currentTime,
+            end: currentTime,
+        };
     }
 
     private onMediaSourceOpen = () => {
-        this.mediaSource.duration = this.streamInfo.duration;
+        if (this.streamInfo.duration) {
+            this.mediaSource.duration = this.streamInfo.duration;
+        }
         this.bufferOpenSubject.notifyObservers();
     };
 
@@ -127,9 +233,21 @@ export class MediaSourceWrapper {
     }
 }
 
+export interface BufferInfo {
+    duration: number;
+    currentBufferedWindow: BufferWindow;
+    activeAdaptationSets: Array<{ adaptationSet: AdaptationSet; bufferWindow: BufferWindow }>;
+}
+
+export interface BufferWindow {
+    start: number;
+    end: number;
+}
+
 interface SourceBufferRecord {
     currentCodec: string;
     sourceBuffer: SourceBuffer;
+    currentAppendPromise: Promise<void> | null;
     listeners: Array<EventListenerRecord>;
 }
 

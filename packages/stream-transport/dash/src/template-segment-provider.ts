@@ -1,7 +1,7 @@
-import { SegmentProvider, HttpHandlerBase, SegmentAcquisition } from '@mse-player/core';
+import { SegmentProvider, HttpHandlerBase, Acquisition, Segment } from '@mse-player/core';
 
 export interface TemplateSegmentInfo {
-    assetDuration: number;
+    assetDuration: number | null;
     initTemplate: string;
     mediaTemplate: string;
     type: string;
@@ -11,7 +11,7 @@ export interface TemplateSegmentInfo {
 export class TemplateSegmentProvider implements SegmentProvider {
     constructor(private segmentInfo: TemplateSegmentInfo, private id: string, private httpHandler: HttpHandlerBase) {}
 
-    public getInitSegment(): Promise<SegmentAcquisition> {
+    public getInitSegment(): Promise<Acquisition<Segment>> {
         const url = `${this.segmentInfo.absoluteUrl}${this.segmentInfo.initTemplate
             .replace('$RepresentationID$', this.id)
             .replace('$RepresentationID$', this.id)}`;
@@ -19,16 +19,22 @@ export class TemplateSegmentProvider implements SegmentProvider {
         return this.processSegmentResponse(request, 0, 0);
     }
 
-    public getNextSegment(nextSegmentStartTime: number): Promise<SegmentAcquisition> {
-        if (nextSegmentStartTime >= this.segmentInfo.assetDuration) {
-            return Promise.resolve(SegmentAcquisition.notAvailable());
+    public getNextSegment(lastSegmentEndTime: number): Promise<Acquisition<Segment>> {
+        if (this.segmentInfo.assetDuration === null) {
+            throw 'assetDuration is null, linearStreams not supported yet';
+        }
+
+        if (lastSegmentEndTime >= this.segmentInfo.assetDuration) {
+            throw 'requested time is higher that asset duration';
         }
 
         const segmentDuration = 4;
-        const segmentNumber = Math.ceil(nextSegmentStartTime / segmentDuration) + 1;
-        const isLastSegment = nextSegmentStartTime + segmentDuration >= this.segmentInfo.assetDuration;
-        const segmentLength = isLastSegment ? this.segmentInfo.assetDuration - nextSegmentStartTime : segmentDuration;
-        const segmentEndTime = nextSegmentStartTime + segmentLength;
+        const segmentNumber = Math.ceil(lastSegmentEndTime / segmentDuration) + 1;
+        const isLastSegment = lastSegmentEndTime + segmentDuration >= this.segmentInfo.assetDuration;
+        const segmentLength = isLastSegment ? this.segmentInfo.assetDuration - lastSegmentEndTime : segmentDuration;
+        const segmentEndTime = lastSegmentEndTime + segmentLength;
+
+        console.log('requesting segment ', this.id, lastSegmentEndTime, '->', segmentNumber);
 
         const url = `${this.segmentInfo.absoluteUrl}${this.segmentInfo.mediaTemplate
             .replace('$RepresentationID$', this.id)
@@ -39,17 +45,15 @@ export class TemplateSegmentProvider implements SegmentProvider {
         return this.processSegmentResponse(request, segmentLength, segmentEndTime);
     }
 
-    private processSegmentResponse(request: Promise<ArrayBuffer>, segmentLength: number, segmentEndTime: number): Promise<SegmentAcquisition> {
+    private processSegmentResponse(request: Promise<ArrayBuffer>, segmentLength: number, segmentEndTime: number): Promise<Acquisition<Segment>> {
         return request
-            .then(data => {
-                return SegmentAcquisition.success({
-                    data,
-                    length: segmentLength,
-                    segmentEndTime: segmentEndTime,
+            .then(bytes => {
+                return Acquisition.success({
+                    bytes,
                 });
             })
             .catch(e => {
-                return SegmentAcquisition.error({
+                return Acquisition.error({
                     payload: e,
                 });
             });

@@ -39,7 +39,6 @@ export class SessionController {
 
         const abr = DependencyContainer.getAbr(streamDescriptor);
         const segmentAcquisitionManager = new SegmentAcquisitionManager(abr);
-        this.errorManager.registerErrorEmitter(segmentAcquisitionManager.getErrorEmitter());
 
         return this.stateManager.decorateInitialBuffering(async () => {
             await this.bufferController.initialise(segmentAcquisitionManager, streamDescriptor.streamInfo, options.startingPosition);
