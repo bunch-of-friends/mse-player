@@ -7,6 +7,10 @@ export function createSession(sessionController: SessionController): Session {
         onStateChanged: sessionController.onStateChanged,
         onPositionUpdate: sessionController.onPositionUpdate,
 
+        seek(time: number): void {
+            sessionController.seek(time);
+        },
+
         pause(): void {
             sessionController.pause();
         },
@@ -29,6 +33,7 @@ export interface Session {
     onError: Observable<SessionError>;
     onStateChanged: Observable<SessionState>;
     onPositionUpdate: Observable<StreamPosition>;
+    seek(time: number): void;
     pause(): void;
     resume(): void;
     stop(): Promise<void>;

@@ -34,7 +34,7 @@ export class TemplateSegmentProvider implements SegmentProvider {
         const segmentLength = isLastSegment ? this.segmentInfo.assetDuration - lastSegmentEndTime : segmentDuration;
         const segmentEndTime = lastSegmentEndTime + segmentLength;
 
-        console.log('requesting segment ', this.id, lastSegmentEndTime, '->', segmentNumber);
+        // console.log('requesting segment ', this.id, lastSegmentEndTime, '->', segmentNumber);
 
         const url = `${this.segmentInfo.absoluteUrl}${this.segmentInfo.mediaTemplate
             .replace('$RepresentationID$', this.id)

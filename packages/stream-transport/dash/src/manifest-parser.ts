@@ -30,7 +30,7 @@ export class ManifestParser {
             adaptationSets: adaptationSets.filter(x => x.type === AdaptationSetType.Video),
         };
 
-        console.log('streamDescriptor:', streamDescriptor); // tslint:disable-line
+        // console.log('streamDescriptor:', streamDescriptor); // tslint:disable-line
         return streamDescriptor;
     }
 

@@ -46,6 +46,11 @@ export class SessionController {
         });
     }
 
+    public seek(time: number) {
+        this.videoElementWrapper.setPosition(time);
+        this.bufferController.seek(time);
+    }
+
     public pause(): void {
         if (!this.canAcceptActions) {
             throw 'session is stopped or stopping';

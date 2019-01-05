@@ -11,7 +11,7 @@ export class BufferSourceManager {
     private lastPositionUpdate: StreamPosition | null = null;
     private adapdationSets: Array<AdaptationSet>;
     private mediaSourceWrapper: MediaSourceWrapper | null;
-    private bufferWindowManager = new BufferWindowManager({ windowStartOffset: -30, windowEndOffset: 60 });
+    private bufferWindowManager = new BufferWindowManager({ windowStartOffset: -10, windowEndOffset: 20 });
     private currentAcquisitioninProgress: Array<Promise<void>> | null = null;
 
     constructor(
@@ -40,6 +40,11 @@ export class BufferSourceManager {
 
         this.mediaSourceWrapper.initialiseSources(startingRepresentations);
         this.checkBufferStatus(startingTime);
+    }
+
+    public seek(time: number) {
+        this.lastPositionUpdate = { currentTime: time };
+        this.checkBufferStatus(time);
     }
 
     public stop() {

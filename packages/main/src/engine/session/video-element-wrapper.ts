@@ -44,6 +44,10 @@ export class VideoElementWrapper {
         this.videoElement.src = sourceUrl;
     }
 
+    public setPosition(time: number) {
+        this.videoElement.currentTime = time;
+    }
+
     public pause(): void {
         this.videoElement.pause();
     }

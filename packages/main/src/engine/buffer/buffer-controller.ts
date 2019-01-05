@@ -23,6 +23,12 @@ export class BufferController {
         return this.errorEmitter;
     }
 
+    public seek(time: number) {
+        if (this.bufferSourceManager) {
+            this.bufferSourceManager.seek(time);
+        }
+    }
+
     public stop(): void {
         if (this.bufferSourceManager) {
             this.bufferSourceManager.stop();
