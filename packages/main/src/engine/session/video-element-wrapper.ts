@@ -92,9 +92,7 @@ export class VideoElementWrapper {
     }
 
     public getVideoPlaybackQuality(): VideoPlaybackQuality {
-        console.dir(this.videoElement);
         return {} as VideoPlaybackQuality;
-        // return this.videoElement.getVideoPlaybackQuality();
     }
 }
 

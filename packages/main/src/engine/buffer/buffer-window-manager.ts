@@ -1,5 +1,5 @@
 import { AdaptationSet } from '@mse-player/core';
-import { BufferInfo, BufferWindow } from './media-source-wrapper';
+import { BufferInfo } from './media-source-wrapper';
 
 export class BufferWindowManager {
     constructor(private config: BufferSizeConfiguration) {
@@ -37,7 +37,7 @@ export class BufferWindowManager {
                 if (nextSegmentTime !== null) {
                     return { adaptationSet: x.adaptationSet, nextSegmentTime: Math.round(nextSegmentTime) };
                 } else {
-                    // console.log('buffer full, no append required'); 
+                    // console.log('buffer full, no append required');
                     return null;
                 }
             })

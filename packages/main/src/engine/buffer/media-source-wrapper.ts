@@ -204,7 +204,7 @@ export class MediaSourceWrapper {
 
     private createSourceBuffer(mimeCodec: string): { sourceBuffer: SourceBuffer; listeners: Array<EventListenerRecord> } | null {
         try {
-            console.log('creating source buffer for: ' + mimeCodec);
+            console.log('creating source buffer for: ' + mimeCodec); // tslint:disable-line
             const sourceBuffer = this.mediaSource.addSourceBuffer(mimeCodec);
 
             const onError = () => {
