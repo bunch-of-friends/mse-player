@@ -19,20 +19,20 @@ export class TemplateSegmentProvider implements SegmentProvider {
         return this.processSegmentResponse(request, 0, 0);
     }
 
-    public getNextSegment(lastSegmentEndTime: number): Promise<Acquisition<Segment>> {
+    public getNextSegment(requestedSegmentTime: number): Promise<Acquisition<Segment>> {
         if (this.segmentInfo.assetDuration === null) {
             throw 'assetDuration is null, linearStreams not supported yet';
         }
 
-        if (lastSegmentEndTime >= this.segmentInfo.assetDuration) {
+        if (requestedSegmentTime > this.segmentInfo.assetDuration) {
             throw 'requested time is higher that asset duration';
         }
 
         const segmentDuration = 4;
-        const segmentNumber = Math.ceil(lastSegmentEndTime / segmentDuration) + 1;
-        const isLastSegment = lastSegmentEndTime + segmentDuration >= this.segmentInfo.assetDuration;
-        const segmentLength = isLastSegment ? this.segmentInfo.assetDuration - lastSegmentEndTime : segmentDuration;
-        const segmentEndTime = lastSegmentEndTime + segmentLength;
+        const segmentNumber = Math.floor(requestedSegmentTime / segmentDuration) + 1;
+        const isLastSegment = requestedSegmentTime + segmentDuration >= this.segmentInfo.assetDuration;
+        const segmentLength = isLastSegment ? this.segmentInfo.assetDuration - requestedSegmentTime : segmentDuration;
+        const segmentEndTime = requestedSegmentTime + segmentLength;
 
         // console.log('requesting segment ', this.id, lastSegmentEndTime, '->', segmentNumber);
 

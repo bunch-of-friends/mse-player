@@ -11,7 +11,7 @@ export class SegmentAcquisitionManager {
 
     public async acquireSegment(
         adapdationSet: AdaptationSet,
-        lastSegmentEndTime: number
+        segmentTime: number
     ): Promise<Acquisition<{ initSegment: Segment | null; segment: Segment; representation: Representation }>> {
         const representation = this.abr.getNextSegmentRepresentation(adapdationSet);
         const alreadyHasInitSegment = this.initSegmentMap.has(representation);
@@ -23,7 +23,7 @@ export class SegmentAcquisitionManager {
             }
         }
 
-        const acquisition = await representation.segmentProvider.getNextSegment(lastSegmentEndTime);
+        const acquisition = await representation.segmentProvider.getNextSegment(segmentTime);
         if (!acquisition.isSuccess) {
             return Acquisition.error(acquisition.error);
         } else {

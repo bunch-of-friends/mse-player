@@ -1,4 +1,4 @@
-import { StreamTransport } from '@mse-player/core';
+import { StreamTransport, StreamInfo, unwrap } from '@mse-player/core';
 import { DependencyContainer } from '../../dependency/dependency-container';
 import { SessionOptions, SessionState } from '../../api/session';
 import { BufferController } from '../buffer/buffer-controller';
@@ -11,6 +11,7 @@ import { AnalyticsManager } from './analytics-manager';
 import { HttpHandler } from '../../common/http-handler';
 
 export class SessionController {
+    private streamInfo: StreamInfo | null;
     private readonly bufferController: BufferController;
     private readonly errorManager = new SessionErrorManager();
     private readonly stateManager = new SessionStateManager(this.videoElementWrapper);
@@ -37,6 +38,8 @@ export class SessionController {
             this.manifestAcquisitionManager.loadStreamDescriptor(options.url)
         );
 
+        this.streamInfo = streamDescriptor.streamInfo;
+        console.log('streamInfo', this.streamInfo);
         const abr = DependencyContainer.getAbr(streamDescriptor);
         const segmentAcquisitionManager = new SegmentAcquisitionManager(abr);
 
@@ -47,6 +50,15 @@ export class SessionController {
     }
 
     public seek(time: number) {
+        if (!this.canAcceptActions) {
+            throw 'session is stopped or stopping';
+        }
+
+        const duration = unwrap(this.streamInfo).duration || 0;
+        if (time > duration) {
+            time = duration;
+        }
+
         this.videoElementWrapper.setPosition(time);
         this.bufferController.seek(time);
     }

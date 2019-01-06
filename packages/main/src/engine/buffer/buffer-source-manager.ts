@@ -82,7 +82,7 @@ export class BufferSourceManager {
         }
 
         this.currentAcquisitioninProgress = appendRequiredResult.adaptationSetsRequired.map(x => {
-            return this.acquireAndAppendSegment(x.adaptationSet, x.lastSegmentEnd);
+            return this.acquireAndAppendSegment(x.adaptationSet, x.nextSegmentTime);
         });
 
         Promise.all(this.currentAcquisitioninProgress).then(() => {
@@ -93,8 +93,8 @@ export class BufferSourceManager {
         });
     }
 
-    private async acquireAndAppendSegment(adaptation: AdaptationSet, lastSegmentEndTime: number): Promise<void> {
-        const acquisition = await this.segmentAcquisitionManager.acquireSegment(adaptation, lastSegmentEndTime);
+    private async acquireAndAppendSegment(adaptation: AdaptationSet, segmentTime: number): Promise<void> {
+        const acquisition = await this.segmentAcquisitionManager.acquireSegment(adaptation, segmentTime);
 
         if (this.isStopped || !this.mediaSourceWrapper) {
             return;

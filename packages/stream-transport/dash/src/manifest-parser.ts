@@ -27,7 +27,7 @@ export class ManifestParser {
                 isLive,
                 duration,
             },
-            adaptationSets: adaptationSets.filter(x => x.type === AdaptationSetType.Video),
+            adaptationSets
         };
 
         // console.log('streamDescriptor:', streamDescriptor); // tslint:disable-line

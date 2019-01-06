@@ -25,13 +25,13 @@ export class BufferWindowManager {
                 }
 
                 if (endOffset < this.config.windowEndOffset && endOffset < bufferInfo.duration) {
-                    return { adaptationSet: x.adaptationSet, lastSegmentEnd: x.bufferWindow.end };
+                    return { adaptationSet: x.adaptationSet, nextSegmentTime: Math.round(x.bufferWindow.end) };
                 } else {
                     console.log('buffer full, no append required');
                     return null;
                 }
             })
-            .filter(x => x !== null) as Array<{ adaptationSet: AdaptationSet; lastSegmentEnd: number }>;
+            .filter(x => x !== null) as Array<{ adaptationSet: AdaptationSet; nextSegmentTime: number }>;
 
         return {
             isAppendRequired: adaptationSetsRequired.length > 0,
@@ -49,7 +49,7 @@ export interface BufferSizeConfiguration {
 
 interface BufferAppendRequiredResult {
     isAppendRequired: boolean;
-    adaptationSetsRequired: Array<{ adaptationSet: AdaptationSet; lastSegmentEnd: number }>;
+    adaptationSetsRequired: Array<{ adaptationSet: AdaptationSet; nextSegmentTime: number }>;
     currentBufferWindow: BufferWindow;
     duration: number;
 }
