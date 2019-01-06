@@ -35,5 +35,7 @@ export class AnalyticsManager implements AnalyticsManagerBase {
         this.onAnalyticsUpdate.unregisterAllObservers();
     }
 
-    private parseAnalyticsData(source: string, data: HttpHandlerResponseMetadata) {}
+    private parseAnalyticsData(source: string, data: HttpHandlerResponseMetadata) {
+        //
+    }
 }
