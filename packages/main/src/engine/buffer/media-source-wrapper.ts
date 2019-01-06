@@ -50,7 +50,13 @@ export class MediaSourceWrapper {
         }
     }
 
-    public async appendSegment(adaptationSet: AdaptationSet, representation: Representation, segment: Segment): Promise<void> {
+    public async appendSegment(
+        adaptationSet: AdaptationSet,
+        representation: Representation,
+        segment: Segment,
+        requestedSegmentTime: number,
+        isInitSegment = false
+    ): Promise<void> {
         if (this.isDisposed) {
             return Promise.reject();
         }
@@ -87,7 +93,10 @@ export class MediaSourceWrapper {
             sourceBufferRecord.sourceBuffer.appendBuffer(segment.bytes);
         });
 
-        return sourceBufferRecord.currentAppendPromise;
+        await sourceBufferRecord.currentAppendPromise;
+        if (!isInitSegment) {
+            this.validateAppendedSegment(sourceBufferRecord, requestedSegmentTime);
+        }
     }
 
     public dispose() {
@@ -117,10 +126,10 @@ export class MediaSourceWrapper {
 
         // for each active buffer calculate current window
         const activeAdaptationSets = activeSourceBuffers
-            .map(x => {
+            .map(sourceBuffer => {
                 return {
-                    sourceBuffer: x,
-                    bufferWindow: this.calculateCurrentWindow(x.buffered, currentTime),
+                    sourceBuffer,
+                    bufferWindow: this.calculateCurrentWindow(sourceBuffer, currentTime),
                 };
             })
             // for each active buffer find adaptation set
@@ -133,28 +142,7 @@ export class MediaSourceWrapper {
 
         return {
             duration: this.mediaSource.duration,
-            currentBufferedWindow: this.calculateCurrentBufferWindow(activeAdaptationSets.map(x => x.bufferWindow)),
             activeAdaptationSets,
-        };
-    }
-
-    private calculateCurrentBufferWindow(activeBuffersWindows: Array<BufferWindow>): BufferWindow {
-        let start = 0;
-        let end = Number.MAX_VALUE;
-
-        activeBuffersWindows.forEach(x => {
-            if (x.start > start) {
-                start = x.start;
-            }
-
-            if (x.end < end) {
-                end = x.end;
-            }
-        });
-
-        return {
-            start,
-            end,
         };
     }
 
@@ -177,23 +165,25 @@ export class MediaSourceWrapper {
         return result;
     }
 
-    private calculateCurrentWindow(timeRanges: TimeRanges, currentTime: number): BufferWindow {
-        let length = timeRanges.length;
+    private calculateCurrentWindow(sourceBuffer: SourceBuffer, currentTime: number): BufferWindow {
+        const allRanges = [];
+        let activeRange: Range | null = null;
+        let length = sourceBuffer.buffered.length;
         while (length-- > 0) {
             const index = length;
-            const start = timeRanges.start(index);
-            const end = timeRanges.end(index);
+            const start = sourceBuffer.buffered.start(index);
+            const end = sourceBuffer.buffered.end(index);
+
             if (start <= currentTime && currentTime <= end) {
-                return {
-                    start,
-                    end,
-                };
+                activeRange = { start, end };
             }
+
+            allRanges.push({ start, end });
         }
 
         return {
-            start: currentTime,
-            end: currentTime,
+            currentRange: activeRange,
+            allRanges,
         };
     }
 
@@ -231,15 +221,35 @@ export class MediaSourceWrapper {
             return null;
         }
     }
+
+    private validateAppendedSegment(sourceBufferRecord: SourceBufferRecord, requestedSegmentTime: number) {
+        const updatedWindow = this.calculateCurrentWindow(sourceBufferRecord.sourceBuffer, requestedSegmentTime);
+        if (
+            updatedWindow.currentRange &&
+            updatedWindow.currentRange.start <= requestedSegmentTime &&
+            requestedSegmentTime < updatedWindow.currentRange.end
+        ) {
+            // all good
+        } else {
+            throw `invalid buffer update for ${sourceBufferRecord.currentCodec}, position: ${requestedSegmentTime}, ranges: ${JSON.stringify(
+                updatedWindow.allRanges
+            )}`;
+        }
+    }
 }
 
 export interface BufferInfo {
     duration: number;
-    currentBufferedWindow: BufferWindow;
     activeAdaptationSets: Array<{ adaptationSet: AdaptationSet; bufferWindow: BufferWindow }>;
 }
 
 export interface BufferWindow {
+    currentRange: Range | null;
+
+    allRanges: Array<Range>;
+}
+
+interface Range {
     start: number;
     end: number;
 }

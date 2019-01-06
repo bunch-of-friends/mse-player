@@ -13,21 +13,31 @@ export class BufferWindowManager {
     }
 
     public isAppendRequired(currentTime: number, bufferInfo: BufferInfo): BufferAppendRequiredResult {
-        // console.log('current buffer window', bufferInfo.currentBufferedWindow);
-
         const adaptationSetsRequired = bufferInfo.activeAdaptationSets
             .map(x => {
-                const startOffset = x.bufferWindow.start - currentTime;
-                const endOffset = x.bufferWindow.end - currentTime;
+                let nextSegmentTime: number | null = null;
 
-                if (startOffset < this.config.windowStartOffset) {
-                    console.log('REMOVE REQUIRED - NOT IMPLEMENTED YET - buffer will run out of memory eventually');
+                if (!x.bufferWindow.currentRange) {
+                    nextSegmentTime = currentTime;
+                } else {
+                    const startOffset = x.bufferWindow.currentRange.start - currentTime;
+                    const endOffset = x.bufferWindow.currentRange.end - currentTime;
+
+                    // check for remove
+                    if (startOffset < this.config.windowStartOffset) {
+                        console.log('REMOVE REQUIRED - NOT IMPLEMENTED YET - buffer will run out of memory eventually'); // tslint:disable-line
+                    }
+
+                    // check for append
+                    if (endOffset < this.config.windowEndOffset && endOffset < bufferInfo.duration) {
+                        nextSegmentTime = x.bufferWindow.currentRange.end;
+                    }
                 }
 
-                if (endOffset < this.config.windowEndOffset && endOffset < bufferInfo.duration) {
-                    return { adaptationSet: x.adaptationSet, nextSegmentTime: Math.round(x.bufferWindow.end) };
+                if (nextSegmentTime !== null) {
+                    return { adaptationSet: x.adaptationSet, nextSegmentTime: Math.round(nextSegmentTime) };
                 } else {
-                    console.log('buffer full, no append required');
+                    // console.log('buffer full, no append required'); 
                     return null;
                 }
             })
@@ -36,7 +46,6 @@ export class BufferWindowManager {
         return {
             isAppendRequired: adaptationSetsRequired.length > 0,
             adaptationSetsRequired: adaptationSetsRequired,
-            currentBufferWindow: bufferInfo.currentBufferedWindow,
             duration: bufferInfo.duration,
         };
     }
@@ -50,6 +59,5 @@ export interface BufferSizeConfiguration {
 interface BufferAppendRequiredResult {
     isAppendRequired: boolean;
     adaptationSetsRequired: Array<{ adaptationSet: AdaptationSet; nextSegmentTime: number }>;
-    currentBufferWindow: BufferWindow;
     duration: number;
 }

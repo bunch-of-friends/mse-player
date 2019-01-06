@@ -106,8 +106,14 @@ export class BufferSourceManager {
         }
 
         if (acquisition.payload.initSegment) {
-            await this.mediaSourceWrapper.appendSegment(adaptation, acquisition.payload.representation, acquisition.payload.initSegment);
+            await this.mediaSourceWrapper.appendSegment(
+                adaptation,
+                acquisition.payload.representation,
+                acquisition.payload.initSegment,
+                segmentTime,
+                true
+            );
         }
-        await this.mediaSourceWrapper.appendSegment(adaptation, acquisition.payload.representation, acquisition.payload.segment);
+        await this.mediaSourceWrapper.appendSegment(adaptation, acquisition.payload.representation, acquisition.payload.segment, segmentTime);
     }
 }
