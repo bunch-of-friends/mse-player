@@ -39,7 +39,6 @@ export class SessionController {
         );
 
         this.streamInfo = streamDescriptor.streamInfo;
-        console.log('streamInfo', this.streamInfo);
         const abr = DependencyContainer.getAbr(streamDescriptor);
         const segmentAcquisitionManager = new SegmentAcquisitionManager(abr);
 

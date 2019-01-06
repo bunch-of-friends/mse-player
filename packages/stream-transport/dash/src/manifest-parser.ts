@@ -27,7 +27,7 @@ export class ManifestParser {
                 isLive,
                 duration,
             },
-            adaptationSets
+            adaptationSets: adaptationSets.filter(x => x.type === AdaptationSetType.Video) as Array<AdaptationSet>, // INFO: until audio url resolution works fully (DASH)
         };
 
         // console.log('streamDescriptor:', streamDescriptor); // tslint:disable-line
