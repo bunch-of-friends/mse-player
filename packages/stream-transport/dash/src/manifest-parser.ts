@@ -42,9 +42,12 @@ export class ManifestParser {
         const initTemplate = this.xpathHelper.getSingleAttribute(Expressions.INIT_TEMPLATE, adaptationSetNode);
         const mediaTemplate = this.xpathHelper.getSingleAttribute(Expressions.MEDIA_TEMPLATE, adaptationSetNode);
         const defaultCodecs = this.xpathHelper.getSingleAttribute(Expressions.CODECS, adaptationSetNode);
+        const timescale = parseInt(this.xpathHelper.getSingleAttribute(Expressions.SEGMENT_TIMESCALE, adaptationSetNode), 0) || 1;
         const representationNodes = this.xpathHelper.getNodes(Expressions.REPRESENTATION, adaptationSetNode);
         const representations: Array<Representation> = [];
-        const segmentInfo = { assetDuration, initTemplate, mediaTemplate, type, absoluteUrl };
+        const segmentDurations = this.getSegmentDurations(adaptationSetNode);
+        const segmentInfo = { assetDuration, initTemplate, mediaTemplate, type, absoluteUrl, timescale, segmentDurations };
+
         representationNodes.forEach(y => representations.push(this.parseRepresentation(y, segmentInfo, defaultCodecs)));
         return {
             type: type as AdaptationSetType,
@@ -55,11 +58,13 @@ export class ManifestParser {
 
     private parseRepresentation(representationNode: Node, segmentInfo: TemplateSegmentInfo, defaultCodecs: string) {
         const id = this.xpathHelper.getSingleAttribute(Expressions.ID, representationNode);
+        const bandwidth = parseInt(this.xpathHelper.getSingleAttribute(Expressions.BANDWIDTH, representationNode), 10) || 0;
+
         const representation = {
-            id: id,
-            bandwidth: parseInt(this.xpathHelper.getSingleAttribute(Expressions.BANDWIDTH, representationNode), 10) || 0,
-            segmentProvider: new TemplateSegmentProvider(segmentInfo, id, this.httpHandler),
             codecs: this.xpathHelper.getSingleAttribute(Expressions.CODECS, representationNode) || defaultCodecs,
+            id,
+            bandwidth,
+            segmentProvider: new TemplateSegmentProvider(segmentInfo, id, bandwidth, this.httpHandler),
         };
 
         if (segmentInfo.type === AdaptationSetType.Video) {
@@ -109,5 +114,22 @@ export class ManifestParser {
                     return totalTime;
             }
         }, 0);
+    }
+
+    private getSegmentDurations(adaptationSetNode: Node) {
+        const sNodes = this.xpathHelper.getNodes(Expressions.SEGMENT_TIMEDATA, adaptationSetNode);
+
+        if (sNodes && sNodes.length) {
+            return sNodes.map((sNode) => {
+                return {
+                    delta: parseInt(this.xpathHelper.getSingleAttribute(Expressions.DELTA, sNode), 0),
+                    repeats: parseInt(this.xpathHelper.getSingleAttribute(Expressions.REPEATS, sNode), 0) || 1
+                };
+            });
+        } else {
+            const duration = parseInt(this.xpathHelper.getSingleAttribute(Expressions.SEGMENT_DURATION, adaptationSetNode), 0);
+            const timescale = parseInt(this.xpathHelper.getSingleAttribute(Expressions.SEGMENT_TIMESCALE, adaptationSetNode), 0);
+            return [{ delta: duration / timescale, repeats: 100000 }]; // TODO: calculate how many times to repeat
+        }
     }
 }
