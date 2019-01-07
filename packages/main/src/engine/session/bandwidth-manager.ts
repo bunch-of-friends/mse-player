@@ -17,7 +17,7 @@ export class BandwidthManager {
         if (this.bandwidthBuffer.length > this.BANDWIDTH_SAMPLE_SIZE) {
             this.bandwidthBuffer.shift();
         }
-    console.log('DOWNLOADED: ' + sample.sizeKb, 'kb IN: ', sample.timeTakenSeconds, 'SECONDS');
+        // console.log('DOWNLOADED: ' + sample.sizeKb, 'kb IN: ', sample.timeTakenSeconds, 'SECONDS');
         this.averageBandwidth = this.calculateAverageBandwidth();
     }
 
