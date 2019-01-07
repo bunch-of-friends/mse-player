@@ -1,5 +1,5 @@
 import { AdaptationSet, AdaptationSetType, HttpHandlerBase, Representation, XpathHelper, StreamDescriptor } from '@mse-player/core';
-import { TemplateSegmentProvider, TemplateSegmentInfo } from './template-segment-provider';
+import { TemplateSegmentProvider, TemplateSegmentMetadata } from './template-segment-provider';
 import * as Expressions from './constants/xpath-expressions';
 
 const iso8601DurationRegex = /P(?:([0-9]+)Y)?(?:([0-9]+)M)?(?:([0-9]+)D)?T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+(?:\.[0-9]+)?)?S)?/;
@@ -53,7 +53,7 @@ export class ManifestParser {
         };
     }
 
-    private parseRepresentation(representationNode: Node, segmentInfo: TemplateSegmentInfo, defaultCodecs: string) {
+    private parseRepresentation(representationNode: Node, segmentInfo: TemplateSegmentMetadata, defaultCodecs: string) {
         const id = this.xpathHelper.getSingleAttribute(Expressions.ID, representationNode);
         const bandwidth = parseInt(this.xpathHelper.getSingleAttribute(Expressions.BANDWIDTH, representationNode), 10) || 0;
 
@@ -120,13 +120,13 @@ export class ManifestParser {
             return sNodes.map((sNode) => {
                 return {
                     delta: parseInt(this.xpathHelper.getSingleAttribute(Expressions.DELTA, sNode), 0),
-                    repeats: parseInt(this.xpathHelper.getSingleAttribute(Expressions.REPEATS, sNode), 0) || 1
+                    repeats: (parseInt(this.xpathHelper.getSingleAttribute(Expressions.REPEATS, sNode), 0) || 0) + 1
                 };
             });
         } else {
             const duration = parseInt(this.xpathHelper.getSingleAttribute(Expressions.SEGMENT_DURATION, adaptationSetNode), 0);
             const timescale = parseInt(this.xpathHelper.getSingleAttribute(Expressions.SEGMENT_TIMESCALE, adaptationSetNode), 0);
-            return [{ delta: duration / timescale, repeats: 100000 }]; // TODO: calculate how many times to repeat
+            return [{ delta: duration, repeats: 100000 }]; // TODO: calculate how many times to repeat
         }
     }
 }

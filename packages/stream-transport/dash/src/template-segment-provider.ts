@@ -1,6 +1,6 @@
 import { SegmentProvider, HttpHandlerBase, Acquisition, Segment } from '@mse-player/core';
 
-export interface TemplateSegmentInfo {
+export interface TemplateSegmentMetadata {
     assetDuration: number | null;
     initTemplate: string;
     mediaTemplate: string;
@@ -11,43 +11,32 @@ export interface TemplateSegmentInfo {
 }
 
 export class TemplateSegmentProvider implements SegmentProvider {
-    constructor(private segmentInfo: TemplateSegmentInfo, private id: string, private bandwidth: number, private httpHandler: HttpHandlerBase) {}
+    constructor(private segmentMetadata: TemplateSegmentMetadata, private id: string, private bandwidth: number, private httpHandler: HttpHandlerBase) {}
 
     public getInitSegment(): Promise<Acquisition<Segment>> {
-        const url = `${this.segmentInfo.absoluteUrl}${this.segmentInfo.initTemplate
-            .replace('$RepresentationID$', this.id)
-            .replace('$RepresentationID$', this.id)
-            .replace('$Bandwidth$', `${this.bandwidth}`)
-            .replace('$Time$', '0')}`;
+        const url = this.generateUrl(this.segmentMetadata.initTemplate, 0, 0);
         const request = this.httpHandler.getArrayBuffer(url);
         return this.processSegmentResponse(request, 0, 0);
     }
 
     public getNextSegment(requestedSegmentTime: number): Promise<Acquisition<Segment>> {
-        if (this.segmentInfo.assetDuration === null) {
+        if (this.segmentMetadata.assetDuration === null) {
             throw 'assetDuration is null, linearStreams not supported yet';
         }
 
-        if (requestedSegmentTime > this.segmentInfo.assetDuration) {
+        if (requestedSegmentTime > this.segmentMetadata.assetDuration) {
             throw 'requested time is higher that asset duration';
         }
 
-        const segmentDuration = this.getSegmentDuration(Math.round(requestedSegmentTime * this.segmentInfo.timescale)) / this.segmentInfo.timescale;
-        const segmentNumber = Math.ceil(requestedSegmentTime / segmentDuration) + 1;
-        // console.log('seg', segmentDuration, segmentNumber)
-        // const isLastSegment = requestedSegmentTime + segmentDuration >= this.segmentInfo.assetDuration;
-        // const segmentLength = isLastSegment ? this.segmentInfo.assetDuration - requestedSegmentTime : segmentDuration;
-        const segmentEndTime = requestedSegmentTime + segmentDuration;
+        const requestedSegmentTimeModified = Math.round((Math.ceil(requestedSegmentTime * 1000) / 1000) * this.segmentMetadata.timescale);
 
-        const url = `${this.segmentInfo.absoluteUrl}${this.segmentInfo.mediaTemplate
-            .replace('$RepresentationID$', this.id)
-            .replace('$RepresentationID$', this.id)
-            .replace('$Number$', segmentNumber.toString())
-            .replace('$Bandwidth$', `${this.bandwidth}`)
-            .replace('$Time$', `${Math.round(requestedSegmentTime * this.segmentInfo.timescale)}`)}`;
+        const { segmentStart, segmentDuration, segmentIndex, segmentEnd } = this.getSegmentInformation(requestedSegmentTimeModified);
+
+        const url = this.generateUrl(this.segmentMetadata.mediaTemplate, segmentIndex, segmentStart);
 
         const request = this.httpHandler.getArrayBuffer(url);
-        return this.processSegmentResponse(request, segmentDuration, segmentEndTime);
+
+        return this.processSegmentResponse(request, segmentDuration / this.segmentMetadata.timescale, segmentEnd / this.segmentMetadata.timescale);
     }
 
     private processSegmentResponse(request: Promise<ArrayBuffer>, segmentLength: number, segmentEndTime: number): Promise<Acquisition<Segment>> {
@@ -64,22 +53,37 @@ export class TemplateSegmentProvider implements SegmentProvider {
             });
     }
 
-    private getSegmentDuration(segmentStartTime: number) {
-        let pointer = 0;
+    private generateUrl(relativePath: string, segmentIndex: number, segmentStart: number) {
+        return `${this.segmentMetadata.absoluteUrl}${relativePath
+            .replace(/\$RepresentationID\$/g, this.id)
+            .replace(/\$Number\$/g, `${segmentIndex}`)
+            .replace(/\$Bandwidth\$/g, `${this.bandwidth}`)
+            .replace(/\$Time\$/g, `${segmentStart}`)}`;
+    }
 
-        const segmentDurationData = this.segmentInfo.segmentDurations.find((segmentDuration, index) => {
-            const endOfDurationValiditity = pointer + segmentDuration.delta * segmentDuration.repeats;
-            if (segmentStartTime < endOfDurationValiditity) {
-                if (segmentDuration.repeats === 1) {
-                console.log('FOUND AT INDEX', index, segmentStartTime)
+    // Finds the segment info for an arbitrary point in the stream
+    private getSegmentInformation(segmentStartTime: number) {
+        let segmentStart = 0;
+        let segmentIndex = 0;
+        // TODO: could be more efficient
+        const segmentInfo = this.segmentMetadata.segmentDurations.find((segmentDuration) => {
+            for (let i = 0; i < segmentDuration.repeats; i++) {
+                const newSegmentStart = segmentStart + segmentDuration.delta;
+                segmentIndex++;
+                if (segmentStartTime < newSegmentStart) {
+                    return true;
                 }
-                return true;
-            } else {
-                pointer = endOfDurationValiditity;
-                return false;
+                segmentStart = newSegmentStart;
             }
+            return false;
         });
-        // console.log('CURRENT SEG DURATION', segmentDurationData && segmentDurationData.delta)
-        return (segmentDurationData && segmentDurationData.delta) || 1;
+
+        const segmentDuration = (segmentInfo && segmentInfo.delta) || 1
+        return {
+            segmentStart,
+            segmentEnd: segmentStart + segmentDuration,
+            segmentIndex,
+            segmentDuration
+        };
     }
 }
