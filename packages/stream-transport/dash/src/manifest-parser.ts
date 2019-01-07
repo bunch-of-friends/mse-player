@@ -41,10 +41,11 @@ export class ManifestParser {
         const type = this.xpathHelper.getSingleAttribute(Expressions.CONTENT_TYPE, adaptationSetNode);
         const initTemplate = this.xpathHelper.getSingleAttribute(Expressions.INIT_TEMPLATE, adaptationSetNode);
         const mediaTemplate = this.xpathHelper.getSingleAttribute(Expressions.MEDIA_TEMPLATE, adaptationSetNode);
+        const defaultCodecs = this.xpathHelper.getSingleAttribute(Expressions.CODECS, adaptationSetNode);
         const representationNodes = this.xpathHelper.getNodes(Expressions.REPRESENTATION, adaptationSetNode);
         const representations: Array<Representation> = [];
         const segmentInfo = { assetDuration, initTemplate, mediaTemplate, type, absoluteUrl };
-        representationNodes.forEach(y => representations.push(this.parseRepresentation(y, segmentInfo)));
+        representationNodes.forEach(y => representations.push(this.parseRepresentation(y, segmentInfo, defaultCodecs)));
         return {
             type: type as AdaptationSetType,
             mimeType: this.xpathHelper.getSingleAttribute(Expressions.MIME_TYPES, adaptationSetNode),
@@ -52,13 +53,13 @@ export class ManifestParser {
         };
     }
 
-    private parseRepresentation(representationNode: Node, segmentInfo: TemplateSegmentInfo) {
+    private parseRepresentation(representationNode: Node, segmentInfo: TemplateSegmentInfo, defaultCodecs: string) {
         const id = this.xpathHelper.getSingleAttribute(Expressions.ID, representationNode);
         const representation = {
-            codecs: this.xpathHelper.getSingleAttribute(Expressions.CODECS, representationNode),
             id: id,
             bandwidth: parseInt(this.xpathHelper.getSingleAttribute(Expressions.BANDWIDTH, representationNode), 10) || 0,
             segmentProvider: new TemplateSegmentProvider(segmentInfo, id, this.httpHandler),
+            codecs: this.xpathHelper.getSingleAttribute(Expressions.CODECS, representationNode) || defaultCodecs,
         };
 
         if (segmentInfo.type === AdaptationSetType.Video) {
