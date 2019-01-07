@@ -19,7 +19,12 @@
 
 <body>
     <div id="input">
-        <input id="manifest-url" type="text" value="http://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"></div>
+        <select id="manifest-url-select">
+            <option value="http://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd">Big Bunny Clear</option>
+            <option value="http://amssamples.streaming.mediaservices.windows.net/91492735-c523-432b-ba01-faba6c2206a2/AzureMediaServicesPromo.ism/manifest(format=mpd-time-csf)">Asure Clear</option>
+            <option value="http://amssamples.streaming.mediaservices.windows.net/8b661219-cef3-4413-9471-a0b02794cc4c/BigBuckBunny.ism/manifest(format=mpd-time-csf)">Big Bunny PR</option>
+        </select>
+        <input id="manifest-url" type="text"></div>
     </div>
     <div id="video-buttons">
         <button id="load">Load video</button>

@@ -3,6 +3,8 @@ import * as mse from '@mse-player/main';
 const videoContainer = document.getElementById('video-container') as HTMLVideoElement;
 const infoContainer = document.getElementById('info') as HTMLDivElement;
 const logContainer = document.getElementById('log') as HTMLDivElement;
+const manifestUrlSelect = document.getElementById('manifest-url-select') as HTMLSelectElement;
+const manifestUrlInput = document.getElementById('manifest-url') as HTMLSelectElement;
 
 let player: mse.Player | null;
 let session: mse.Session | null;
@@ -10,17 +12,35 @@ let session: mse.Session | null;
 init();
 
 function init() {
+    manifestUrlInput.value = localStorage.getItem('manifest-value') || manifestUrlInput.value;
+    manifestUrlSelect.value = localStorage.getItem('manifest-value') || manifestUrlSelect.value;
+
+    manifestUrlInput.addEventListener('change', saveCurrentManifestChoice);
+    manifestUrlInput.addEventListener('keyup', saveCurrentManifestChoice)
+
+    manifestUrlSelect.addEventListener('change', (e) => {
+        const value = manifestUrlSelect.options[manifestUrlSelect.selectedIndex].value;
+        manifestUrlInput.value = value;
+        saveCurrentManifestChoice();
+    });
+
     player = mse.createPlayer(videoContainer);
 
     wireUpButtons(() => {
         const s = player.startSession({
-            url: (document.getElementById('manifest-url') as HTMLInputElement).value,
+            url: manifestUrlSelect.value,
             autoPlay: true,
             startingPosition: 0,
         });
         wireUpEvents(s);
         return s;
     });
+}
+
+function saveCurrentManifestChoice() {
+    const value = manifestUrlInput.value;
+    manifestUrlSelect.value = value;
+    localStorage.setItem('manifest-value', value);
 }
 
 function wireUpEvents(s: mse.Session) {
