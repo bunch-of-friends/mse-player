@@ -7,7 +7,7 @@ export interface TemplateSegmentMetadata {
     type: string;
     absoluteUrl: string;
     timescale: number;
-    segmentDurations: Array<{ delta: number, repeats: number }>;
+    segmentDurations: Array<{ delta: number; repeats: number }>;
 }
 
 export class TemplateSegmentProvider implements SegmentProvider {
@@ -19,18 +19,20 @@ export class TemplateSegmentProvider implements SegmentProvider {
         return this.processSegmentResponse(request, 0, 0);
     }
 
-    public getNextSegment(requestedSegmentTime: number): Promise<Acquisition<Segment>> {
+    public getNextSegment(requestedSegmentTimeSeconds: number): Promise<Acquisition<Segment>> {
         if (this.segmentMetadata.assetDuration === null) {
             throw 'assetDuration is null, linearStreams not supported yet';
         }
 
-        if (requestedSegmentTime > this.segmentMetadata.assetDuration) {
+        if (requestedSegmentTimeSeconds > this.segmentMetadata.assetDuration) {
             throw 'requested time is higher that asset duration';
         }
 
-        const requestedSegmentTimeModified = Math.round((Math.ceil(requestedSegmentTime * 1000) / 1000) * this.segmentMetadata.timescale);
+        const requestedSegmentTimeFixed = Math.ceil(requestedSegmentTimeSeconds * 1000) / 1000; // TODO: we need a better solution to the loss of precision when normalising times :(
 
-        const { segmentStart, segmentDuration, segmentIndex, segmentEnd } = this.getSegmentInformation(requestedSegmentTimeModified);
+        const requestedSegmentTimeNormalised = Math.round(requestedSegmentTimeFixed * this.segmentMetadata.timescale);
+
+        const { segmentStart, segmentDuration, segmentIndex, segmentEnd } = this.getSegmentInformation(requestedSegmentTimeNormalised);
 
         const url = this.generateUrl(this.segmentMetadata.mediaTemplate, segmentIndex, segmentStart);
 
@@ -66,9 +68,9 @@ export class TemplateSegmentProvider implements SegmentProvider {
         let segmentStart = 0;
         let segmentIndex = 0;
         // TODO: could be more efficient
-        const segmentInfo = this.segmentMetadata.segmentDurations.find((segmentDuration) => {
-            for (let i = 0; i < segmentDuration.repeats; i++) {
-                const newSegmentStart = segmentStart + segmentDuration.delta;
+        const segmentInfo = this.segmentMetadata.segmentDurations.find(segmentDurationData => {
+            for (let i = 0; i < segmentDurationData.repeats; i++) {
+                const newSegmentStart = segmentStart + segmentDurationData.delta;
                 segmentIndex++;
                 if (segmentStartTime < newSegmentStart) {
                     return true;
@@ -78,12 +80,12 @@ export class TemplateSegmentProvider implements SegmentProvider {
             return false;
         });
 
-        const segmentDuration = (segmentInfo && segmentInfo.delta) || 1
+        const segmentDuration = (segmentInfo && segmentInfo.delta) || 1;
         return {
             segmentStart,
             segmentEnd: segmentStart + segmentDuration,
             segmentIndex,
-            segmentDuration
+            segmentDuration,
         };
     }
 }

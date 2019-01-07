@@ -16,9 +16,9 @@ function init() {
     manifestUrlSelect.value = localStorage.getItem('manifest-value') || manifestUrlSelect.value;
 
     manifestUrlInput.addEventListener('change', saveCurrentManifestChoice);
-    manifestUrlInput.addEventListener('keyup', saveCurrentManifestChoice)
+    manifestUrlInput.addEventListener('keyup', saveCurrentManifestChoice);
 
-    manifestUrlSelect.addEventListener('change', (e) => {
+    manifestUrlSelect.addEventListener('change', e => {
         const value = manifestUrlSelect.options[manifestUrlSelect.selectedIndex].value;
         manifestUrlInput.value = value;
         saveCurrentManifestChoice();

@@ -43,9 +43,9 @@ export class ManifestParser {
         const representationNodes = this.xpathHelper.getNodes(Expressions.REPRESENTATION, adaptationSetNode);
         const representations: Array<Representation> = [];
         const segmentDurations = this.getSegmentDurations(adaptationSetNode);
-        const segmentInfo = { assetDuration, initTemplate, mediaTemplate, type, absoluteUrl, timescale, segmentDurations };
+        const segmentMetadata = { assetDuration, initTemplate, mediaTemplate, type, absoluteUrl, timescale, segmentDurations };
 
-        representationNodes.forEach(y => representations.push(this.parseRepresentation(y, segmentInfo, defaultCodecs)));
+        representationNodes.forEach(y => representations.push(this.parseRepresentation(y, segmentMetadata, defaultCodecs)));
         return {
             type: type as AdaptationSetType,
             mimeType: this.xpathHelper.getSingleAttribute(Expressions.MIME_TYPES, adaptationSetNode),
@@ -117,10 +117,10 @@ export class ManifestParser {
         const sNodes = this.xpathHelper.getNodes(Expressions.SEGMENT_TIMEDATA, adaptationSetNode);
 
         if (sNodes && sNodes.length) {
-            return sNodes.map((sNode) => {
+            return sNodes.map(sNode => {
                 return {
                     delta: parseInt(this.xpathHelper.getSingleAttribute(Expressions.DELTA, sNode), 0),
-                    repeats: (parseInt(this.xpathHelper.getSingleAttribute(Expressions.REPEATS, sNode), 0) || 0) + 1
+                    repeats: (parseInt(this.xpathHelper.getSingleAttribute(Expressions.REPEATS, sNode), 0) || 0) + 1,
                 };
             });
         } else {
