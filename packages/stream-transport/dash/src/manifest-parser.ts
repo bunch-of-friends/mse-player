@@ -1,4 +1,4 @@
-import { AdaptationSet, AdaptationSetType, HttpHandlerBase, ManifestAcquisition, Representation, XpathHelper } from '@mse-player/core';
+import { AdaptationSet, AdaptationSetType, HttpHandlerBase, Representation, XpathHelper, StreamDescriptor } from '@mse-player/core';
 import { TemplateSegmentProvider, TemplateSegmentInfo } from './template-segment-provider';
 import * as Expressions from './constants/xpath-expressions';
 
@@ -8,7 +8,7 @@ export class ManifestParser {
     private xpathHelper: XpathHelper;
     constructor(private httpHandler: HttpHandlerBase) {}
 
-    public getStreamDescriptor(xml: Document): ManifestAcquisition {
+    public getStreamDescriptor(xml: Document): StreamDescriptor {
         this.xpathHelper = new XpathHelper(xml, this.getNamespace(xml));
 
         const streamInfoExpression = this.xpathHelper.concatenateExpressions(Expressions.TYPE, Expressions.DURATION);
@@ -22,19 +22,16 @@ export class ManifestParser {
         const adaptationSets: Array<AdaptationSet> = [];
         adaptationSetNodes.forEach(x => adaptationSets.push(this.parseAdaptationSet(x, duration, absoluteUrl)));
 
-        const manifestAcquisition = {
-            isSuccess: true,
-            streamDescriptor: {
-                streamInfo: {
-                    isLive,
-                    duration,
-                },
-                adaptationSets,
+        const streamDescriptor = {
+            streamInfo: {
+                isLive,
+                duration,
             },
+            adaptationSets: adaptationSets.filter(x => x.type === AdaptationSetType.Video) as Array<AdaptationSet>, // INFO: until audio url resolution works fully (DASH)
         };
 
-        console.log('manifestAcquision:', manifestAcquisition); // tslint:disable-line
-        return manifestAcquisition;
+        // console.log('streamDescriptor:', streamDescriptor); // tslint:disable-line
+        return streamDescriptor;
     }
 
     private parseAdaptationSet(adaptationSetNode: Node, assetDuration: number, absoluteUrl: string) {

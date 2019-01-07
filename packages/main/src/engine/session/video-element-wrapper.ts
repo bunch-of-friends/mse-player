@@ -44,6 +44,10 @@ export class VideoElementWrapper {
         this.videoElement.src = sourceUrl;
     }
 
+    public setPosition(time: number) {
+        this.videoElement.currentTime = time;
+    }
+
     public pause(): void {
         this.videoElement.pause();
     }
@@ -85,6 +89,10 @@ export class VideoElementWrapper {
 
     public getMediaError(): MediaError | null {
         return this.videoElement.error;
+    }
+
+    public getVideoPlaybackQuality(): VideoPlaybackQuality {
+        return {} as VideoPlaybackQuality;
     }
 }
 

@@ -1,10 +1,15 @@
-import { AnalyticsData } from '@mse-player/core';
+import { HttpHandlerResponseMetadata } from '@mse-player/core';
 import { EventEmitter } from './event-emitter';
 export class HttpHandler {
-    constructor(private analyticsEmitter: EventEmitter<AnalyticsData>) {}
+    private analyticsEmitter = new EventEmitter<HttpHandlerResponseMetadata>('httpHandler');
+
     public getXml(url: string): Promise<Document | null> {
-        const onLoadHandler = (xhrResponse: XMLHttpRequest) => xhrResponse.responseXML;
+        const onLoadHandler = (xhrResponse: XMLHttpRequest) => {
+            // this.analyticsEmitter.notifyEvent({ responseSizeInBytes: xhrResponse.response.byteLength });
+            return xhrResponse.responseXML;
+        };
         return this.sendXhr({
+            requestTime: Date.now(),
             url,
             responseType: 'document',
             mimeType: 'text/xml',
@@ -13,15 +18,24 @@ export class HttpHandler {
     }
 
     public getArrayBuffer(url: string): Promise<ArrayBuffer> {
-        const onLoadHandler = (xhrResponse: XMLHttpRequest) => xhrResponse.response;
+        const onLoadHandler = (xhrResponse: XMLHttpRequest, metadata: ResponseMetadata) => {
+            this.analyticsEmitter.notifyEvent({ responseSizeInBytes: xhrResponse.response.byteLength, ...metadata });
+            return xhrResponse.response;
+        };
         return this.sendXhr({
+            requestTime: Date.now(),
             url,
             responseType: 'arraybuffer',
             onLoadHandler,
         });
     }
 
+    public getAnalyticsEmitter() {
+        return this.analyticsEmitter;
+    }
+
     private sendXhr<T>(options: CreateXhrOptions<T>): Promise<T> {
+        // console.log('EXECUTING HTTP REQUEST ---->', options);
         return new Promise(resolve => {
             const xhr = new XMLHttpRequest();
             xhr.open(options.httpMethod || 'get', options.url);
@@ -32,7 +46,15 @@ export class HttpHandler {
                 xhr.overrideMimeType(options.mimeType);
             }
             xhr.onload = function() {
-                resolve(options.onLoadHandler(xhr));
+                const responseTime = Date.now();
+                const timeTaken = responseTime - options.requestTime;
+                const responseMetadata: ResponseMetadata = {
+                    timeOfRequest: options.requestTime,
+                    timeOfResponse: responseTime,
+                    timeTaken,
+                };
+                // console.log('RESPONSE ---->', xhr.response);
+                resolve(options.onLoadHandler(xhr, responseMetadata));
             };
             xhr.send(null);
         });
@@ -42,7 +64,14 @@ export class HttpHandler {
 interface CreateXhrOptions<T> {
     url: string;
     httpMethod?: string;
+    requestTime: number;
     responseType?: XMLHttpRequestResponseType;
     mimeType?: string;
-    onLoadHandler(xhr: XMLHttpRequest): T;
+    onLoadHandler(xhr: XMLHttpRequest, metadata: ResponseMetadata): T;
+}
+
+interface ResponseMetadata {
+    timeOfRequest: number;
+    timeOfResponse: number;
+    timeTaken: number;
 }

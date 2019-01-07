@@ -1,7 +1,7 @@
-import { SegmentProvider, HttpHandlerBase, SegmentAcquisition } from '@mse-player/core';
+import { SegmentProvider, HttpHandlerBase, Acquisition, Segment } from '@mse-player/core';
 
 export interface TemplateSegmentInfo {
-    assetDuration: number;
+    assetDuration: number | null;
     initTemplate: string;
     mediaTemplate: string;
     type: string;
@@ -13,7 +13,7 @@ export interface TemplateSegmentInfo {
 export class TemplateSegmentProvider implements SegmentProvider {
     constructor(private segmentInfo: TemplateSegmentInfo, private id: string, private bandwidth: number, private httpHandler: HttpHandlerBase) {}
 
-    public getInitSegment(): Promise<SegmentAcquisition> {
+    public getInitSegment(): Promise<Acquisition<Segment>> {
         const url = `${this.segmentInfo.absoluteUrl}${this.segmentInfo.initTemplate
             .replace('$RepresentationID$', this.id)
             .replace('$RepresentationID$', this.id)
@@ -23,40 +23,42 @@ export class TemplateSegmentProvider implements SegmentProvider {
         return this.processSegmentResponse(request, 0, 0);
     }
 
-    public getNextSegment(nextSegmentStartTime: number): Promise<SegmentAcquisition> {
-        if (nextSegmentStartTime >= this.segmentInfo.assetDuration) {
-            return Promise.resolve(SegmentAcquisition.notAvailable());
+    public getNextSegment(requestedSegmentTime: number): Promise<Acquisition<Segment>> {
+        if (this.segmentInfo.assetDuration === null) {
+            throw 'assetDuration is null, linearStreams not supported yet';
         }
 
-        const segmentDuration = this.getSegmentDuration(Math.round(nextSegmentStartTime * this.segmentInfo.timescale)) / this.segmentInfo.timescale;
-        const segmentNumber = Math.ceil(nextSegmentStartTime / segmentDuration) + 1;
+        if (requestedSegmentTime > this.segmentInfo.assetDuration) {
+            throw 'requested time is higher that asset duration';
+        }
+
+        const segmentDuration = this.getSegmentDuration(Math.round(requestedSegmentTime * this.segmentInfo.timescale)) / this.segmentInfo.timescale;
+        const segmentNumber = Math.ceil(requestedSegmentTime / segmentDuration) + 1;
         // console.log('seg', segmentDuration, segmentNumber)
-        // const isLastSegment = nextSegmentStartTime + segmentDuration >= this.segmentInfo.assetDuration;
-        // const segmentLength = isLastSegment ? this.segmentInfo.assetDuration - nextSegmentStartTime : segmentDuration;
-        const segmentEndTime = nextSegmentStartTime + segmentDuration;
+        // const isLastSegment = requestedSegmentTime + segmentDuration >= this.segmentInfo.assetDuration;
+        // const segmentLength = isLastSegment ? this.segmentInfo.assetDuration - requestedSegmentTime : segmentDuration;
+        const segmentEndTime = requestedSegmentTime + segmentDuration;
 
         const url = `${this.segmentInfo.absoluteUrl}${this.segmentInfo.mediaTemplate
             .replace('$RepresentationID$', this.id)
             .replace('$RepresentationID$', this.id)
             .replace('$Number$', segmentNumber.toString())
             .replace('$Bandwidth$', `${this.bandwidth}`)
-            .replace('$Time$', `${Math.round(nextSegmentStartTime * this.segmentInfo.timescale)}`)}`;
+            .replace('$Time$', `${Math.round(requestedSegmentTime * this.segmentInfo.timescale)}`)}`;
 
         const request = this.httpHandler.getArrayBuffer(url);
         return this.processSegmentResponse(request, segmentDuration, segmentEndTime);
     }
 
-    private processSegmentResponse(request: Promise<ArrayBuffer>, segmentLength: number, segmentEndTime: number): Promise<SegmentAcquisition> {
+    private processSegmentResponse(request: Promise<ArrayBuffer>, segmentLength: number, segmentEndTime: number): Promise<Acquisition<Segment>> {
         return request
-            .then(data => {
-                return SegmentAcquisition.success({
-                    data,
-                    length: segmentLength,
-                    segmentEndTime: segmentEndTime,
+            .then(bytes => {
+                return Acquisition.success({
+                    bytes,
                 });
             })
             .catch(e => {
-                return SegmentAcquisition.error({
+                return Acquisition.error({
                     payload: e,
                 });
             });

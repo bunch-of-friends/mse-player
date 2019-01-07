@@ -2,13 +2,18 @@ import { MediaSourceWrapper } from './media-source-wrapper';
 import { SegmentAcquisitionManager } from '../acquisition/segment-acqusition-manager';
 import { StreamInfo, Segment, AdaptationSet, InternalError, AdaptationSetType } from '@mse-player/core';
 import { VideoElementWrapper } from '../session/video-element-wrapper';
-import { unwrap } from '../../helpers/unwrap';
 import { EventEmitter } from '../../common/event-emitter';
+import { BufferWindowManager } from './buffer-window-manager';
+import { StreamPosition } from '../../api/session';
 
 export class BufferSourceManager {
     private isStopped = false;
+    private lastPositionUpdate: StreamPosition | null = null;
     private adapdationSets: Array<AdaptationSet>;
     private mediaSourceWrapper: MediaSourceWrapper | null;
+    private bufferWindowManager = new BufferWindowManager({ windowStartOffset: -10, windowEndOffset: 20 });
+    private currentAcquisitioninProgress: Array<Promise<void>> | null = null;
+
     constructor(
         private readonly errorEmitter: EventEmitter<InternalError>,
         private readonly streamInfo: StreamInfo,
@@ -17,16 +22,13 @@ export class BufferSourceManager {
     ) {
         this.adapdationSets = segmentAcquisitionManager.getAdapdationSets();
 
-        this.videoElementWrapper.onMediaStateChanged.register(state => {
-            //
-        });
-
         this.videoElementWrapper.onPositionUpdate.register(position => {
-            //
+            this.lastPositionUpdate = position;
+            this.checkBufferStatus(position.currentTime);
         });
     }
 
-    public async initialise(position: number): Promise<void> {
+    public async initialise(startingTime: number): Promise<void> {
         this.mediaSourceWrapper = await this.createMediaSourceWrapper();
 
         const startingRepresentations = this.adapdationSets.map(a => {
@@ -37,9 +39,12 @@ export class BufferSourceManager {
         });
 
         this.mediaSourceWrapper.initialiseSources(startingRepresentations);
-        this.adapdationSets.forEach(x => {
-            this.appendAllSegments(x, position);
-        });
+        this.checkBufferStatus(startingTime);
+    }
+
+    public seek(time: number) {
+        this.lastPositionUpdate = { currentTime: time };
+        this.checkBufferStatus(time);
     }
 
     public stop() {
@@ -62,43 +67,53 @@ export class BufferSourceManager {
         });
     }
 
-    private async appendAllSegments(adaptation: AdaptationSet, startingPosition: number): Promise<void> {
-        await this.acquireAndAppendSegment(adaptation, 0, true);
-        let currentBufferEndPosition = startingPosition;
-        while (currentBufferEndPosition <= unwrap(this.mediaSourceWrapper).getBufferDuration()) {
-            const nextSegment = await this.acquireAndAppendSegment(adaptation, currentBufferEndPosition);
-            if (!nextSegment) {
-                return;
-            }
-            currentBufferEndPosition = nextSegment.segmentEndTime;
-        }
-    }
-
-    private async acquireAndAppendSegment(adaptation: AdaptationSet, position: number, isInitSegment = false): Promise<Segment | null> {
-        const result = await this.segmentAcquisitionManager.acquireSegment(adaptation, position, isInitSegment);
-
-        if (this.isStopped) {
-            return null;
+    private checkBufferStatus(currentTime: number) {
+        if (this.currentAcquisitioninProgress) {
+            return;
         }
 
         if (!this.mediaSourceWrapper) {
-            return null;
+            return;
         }
 
-        if (result.acquisition.isNotAvailable) {
-            return null;
+        const appendRequiredResult = this.bufferWindowManager.isAppendRequired(currentTime, this.mediaSourceWrapper.getBufferInfo(currentTime));
+        if (!appendRequiredResult.isAppendRequired) {
+            return;
         }
 
-        if (result.acquisition.isError && result.acquisition.error) {
-            this.errorEmitter.notifyEvent(result.acquisition.error);
-            return null;
+        this.currentAcquisitioninProgress = appendRequiredResult.adaptationSetsRequired.map(x => {
+            return this.acquireAndAppendSegment(x.adaptationSet, x.nextSegmentTime);
+        });
+
+        Promise.all(this.currentAcquisitioninProgress).then(() => {
+            this.currentAcquisitioninProgress = null;
+            if (this.lastPositionUpdate) {
+                this.checkBufferStatus(this.lastPositionUpdate.currentTime);
+            }
+        });
+    }
+
+    private async acquireAndAppendSegment(adaptation: AdaptationSet, segmentTime: number): Promise<void> {
+        const acquisition = await this.segmentAcquisitionManager.acquireSegment(adaptation, segmentTime);
+
+        if (this.isStopped || !this.mediaSourceWrapper) {
+            return;
         }
 
-        if (result.acquisition.isSuccess && result.acquisition.segment) {
-            this.mediaSourceWrapper.appendSegment(adaptation, result.representation, result.acquisition.segment);
-            return result.acquisition.segment;
+        if (!acquisition.isSuccess) {
+            this.errorEmitter.notifyEvent(acquisition.error);
+            return;
         }
 
-        throw 'append segment - didnt expect to get here';
+        if (acquisition.payload.initSegment) {
+            await this.mediaSourceWrapper.appendSegment(
+                adaptation,
+                acquisition.payload.representation,
+                acquisition.payload.initSegment,
+                segmentTime,
+                true
+            );
+        }
+        await this.mediaSourceWrapper.appendSegment(adaptation, acquisition.payload.representation, acquisition.payload.segment, segmentTime);
     }
 }

@@ -1,44 +1,50 @@
-import { SegmentAcquisition, Abr, AdaptationSet, Representation, InternalError } from '@mse-player/core';
-import { EventEmitter } from '../../common/event-emitter';
+import { Segment, Abr, AdaptationSet, Representation, InternalError, unwrap, Acquisition } from '@mse-player/core';
 
 export class SegmentAcquisitionManager {
-    private readonly errorEmitter = new EventEmitter<InternalError>('segmentAcquisition');
-    private currentAcquisitionPromise: Promise<SegmentAcquisition> | null;
+    private readonly initSegmentMap = new Map<Representation, Segment>();
 
     constructor(private abr: Abr) {}
 
     public getStartingRepresentation(adapdationSet: AdaptationSet): Representation {
-        return this.abr.getNextSegmentRepresentation(adapdationSet);
-    }
-
-    public getErrorEmitter() {
-        return this.errorEmitter;
-    }
-
-    public isAcquiring(): boolean {
-        return this.currentAcquisitionPromise !== null;
+        return this.abr.getStartingRepresentation(adapdationSet);
     }
 
     public async acquireSegment(
         adapdationSet: AdaptationSet,
-        position: number,
-        isInitSegment = false
-    ): Promise<{ acquisition: SegmentAcquisition; representation: Representation }> {
+        segmentTime: number
+    ): Promise<Acquisition<{ initSegment: Segment | null; segment: Segment; representation: Representation }>> {
         const representation = this.abr.getNextSegmentRepresentation(adapdationSet);
+        const alreadyHasInitSegment = this.initSegmentMap.has(representation);
+        if (!alreadyHasInitSegment) {
+            try {
+                await this.acquireInitSegment(representation);
+            } catch (e) {
+                return Acquisition.error(e);
+            }
+        }
 
-        this.currentAcquisitionPromise = isInitSegment
-            ? representation.segmentProvider.getInitSegment()
-            : representation.segmentProvider.getNextSegment(position);
-
-        const acquisition = await this.currentAcquisitionPromise;
-        this.currentAcquisitionPromise = null;
-        return {
-            acquisition,
-            representation,
-        };
+        const acquisition = await representation.segmentProvider.getNextSegment(segmentTime);
+        if (!acquisition.isSuccess) {
+            return Acquisition.error(acquisition.error);
+        } else {
+            return Acquisition.success({
+                initSegment: !alreadyHasInitSegment ? unwrap(this.initSegmentMap.get(representation)) : null,
+                segment: acquisition.payload,
+                representation,
+            });
+        }
     }
 
     public getAdapdationSets(): Array<AdaptationSet> {
         return this.abr.getAdaptationSets();
+    }
+
+    private async acquireInitSegment(representation: Representation): Promise<void> {
+        const initSegmentAcquisition = await representation.segmentProvider.getInitSegment();
+        if (initSegmentAcquisition.isSuccess) {
+            this.initSegmentMap.set(representation, initSegmentAcquisition.payload);
+        } else {
+            return Promise.reject(initSegmentAcquisition.error);
+        }
     }
 }

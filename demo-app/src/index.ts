@@ -96,6 +96,15 @@ function wireUpButtons(startSession: () => mse.Session) {
         }
         session.resume();
     };
+
+    const seekInput = document.getElementById('seek-input') as HTMLInputElement;
+    const seekButton = document.getElementById('seek') as HTMLButtonElement;
+    seekButton.onclick = function() {
+        if (!session) {
+            return;
+        }
+        session.seek(parseInt(seekInput.value, 10));
+    };
 }
 
 function appendLogLine(text: string) {
