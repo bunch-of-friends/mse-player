@@ -8,8 +8,10 @@ export class VideoElementWrapper {
     private readonly errorEmitter: VideoElementErrorEmitter;
     private readonly positionUpdateSubject = createSubject<StreamPosition>();
     private readonly mediaStateSubject = createSubject<MediaState>();
+    private readonly encryptedSubject = createSubject<MediaEncryptedEvent>();
     public readonly onPositionUpdate = createObservable(this.positionUpdateSubject);
     public readonly onMediaStateChanged = createObservable(this.mediaStateSubject);
+    public readonly onEncryptedEvent = createObservable(this.encryptedSubject);
 
     constructor(private videoElement: HTMLVideoElement) {
         (window as any).video = videoElement;
@@ -33,6 +35,10 @@ export class VideoElementWrapper {
 
         this.videoElement.onwaiting = () => {
             this.mediaStateSubject.notifyObservers(MediaState.Stalled);
+        };
+
+        this.videoElement.onencrypted = (event) => {
+            this.encryptedSubject.notifyObservers(event);
         };
     }
 
@@ -93,6 +99,10 @@ export class VideoElementWrapper {
 
     public getVideoPlaybackQuality(): VideoPlaybackQuality {
         return {} as VideoPlaybackQuality;
+    }
+
+    public setMediaKeys(mediaKeys: MediaKeys) {
+        return this.videoElement.setMediaKeys(mediaKeys);
     }
 }
 

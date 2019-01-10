@@ -11,6 +11,7 @@
     "dependencies": {
         "@mse-player/core": "^0.0.1-alpha1",
         "@mse-player/dash": "^0.0.1-alpha1",
+        "@mse-player/playready": "^0.0.1-alpha1",
         "@mse-player/single-level-abr": "^0.0.1-alpha1",
         "@bunch-of-friends/observable": "^1.4.1"
     },

@@ -1,4 +1,4 @@
-import { StreamTransport, StreamInfo, unwrap } from '@mse-player/core';
+import { StreamTransport, StreamInfo, unwrap, StreamProtection } from '@mse-player/core';
 import { DependencyContainer } from '../../dependency/dependency-container';
 import { SessionOptions, SessionState } from '../../api/session';
 import { BufferController } from '../buffer/buffer-controller';
@@ -9,10 +9,13 @@ import { ManifestAcquisitionManager } from '../acquisition/manifest-acquisition-
 import { SegmentAcquisitionManager } from '../acquisition/segment-acqusition-manager';
 import { AnalyticsManager } from './analytics-manager';
 import { HttpHandler } from '../../common/http-handler';
+import { StreamProtectionController } from '../protection/stream-protection-controller';
+import { EmeApiWrapper } from '../protection/eme-api-wrapper';
 
 export class SessionController {
     private streamInfo: StreamInfo | null;
     private readonly bufferController: BufferController;
+    private readonly streamProtectionController: StreamProtectionController;
     private readonly errorManager = new SessionErrorManager();
     private readonly stateManager = new SessionStateManager(this.videoElementWrapper);
     private readonly analyticsManager = new AnalyticsManager(this.videoElementWrapper);
@@ -21,9 +24,10 @@ export class SessionController {
     public readonly onStateChanged = this.stateManager.onStateChanged;
     public readonly onPositionUpdate = this.videoElementWrapper.onPositionUpdate;
 
-    constructor(private readonly videoElementWrapper: VideoElementWrapper, streamTransport: StreamTransport, private httpHandler: HttpHandler) {
+    constructor(private readonly videoElementWrapper: VideoElementWrapper, streamTransport: StreamTransport, streamProtecton: StreamProtection, private httpHandler: HttpHandler, emeApiWrapper: EmeApiWrapper) {
         this.manifestAcquisitionManager = new ManifestAcquisitionManager(streamTransport);
         this.bufferController = new BufferController(this.videoElementWrapper);
+        this.streamProtectionController = new StreamProtectionController(this.videoElementWrapper, emeApiWrapper, streamProtecton);
         this.errorManager.onError.register(() => {
             this.stop();
         });
