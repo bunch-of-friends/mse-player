@@ -1,0 +1,17 @@
+{
+    "name": "@mse-player/playready",
+    "version": "0.0.1-alpha1",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "test": "jest --config ../../../jest.config.json --rootDir",
+        "build": "tsc -b ./src/tsconfig.json",
+        "cleanup": "rimraf -rf dist coverage"
+    },
+    "dependencies": {
+        "@mse-player/core": "^0.0.1-alpha1"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
