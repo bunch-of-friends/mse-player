@@ -28,7 +28,7 @@ function init() {
 
     wireUpButtons(() => {
         const s = player.startSession({
-            url: manifestUrlSelect.value,
+            url: manifestUrlInput.value,
             autoPlay: true,
             startingPosition: 0,
         });
