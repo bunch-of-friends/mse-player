@@ -10,7 +10,7 @@ export class DashStreamTransport extends StreamTransport {
                 payload: 'error requesting manifest',
             });
         } else {
-            const streamDescriptor = manifestParser.getStreamDescriptor(response);
+            const streamDescriptor = manifestParser.getStreamDescriptor(response, manifestUrl);
             return Acquisition.success(streamDescriptor);
         }
     }

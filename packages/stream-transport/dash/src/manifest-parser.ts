@@ -8,7 +8,7 @@ export class ManifestParser {
     private xpathHelper: XpathHelper;
     constructor(private httpHandler: HttpHandlerBase) {}
 
-    public getStreamDescriptor(xml: Document): StreamDescriptor {
+    public getStreamDescriptor(xml: Document, manifestUrl: string): StreamDescriptor {
         this.xpathHelper = new XpathHelper(xml, this.getNamespace(xml));
 
         const streamInfoExpression = this.xpathHelper.concatenateExpressions(Expressions.TYPE, Expressions.DURATION);
@@ -16,7 +16,8 @@ export class ManifestParser {
 
         const isLive = streamInfo.type === 'dynamic';
         const duration = this.getSecondsFromManifestTimeValue(streamInfo.mediaPresentationDuration);
-        const absoluteUrl = xml.URL.replace(xml.URL.substring(xml.URL.lastIndexOf('/') + 1), '');
+
+        const absoluteUrl = manifestUrl.replace(manifestUrl.substring(manifestUrl.lastIndexOf('/') + 1), '');
 
         const adaptationSetNodes = this.xpathHelper.getNodes(Expressions.ADAPTATION_SET, xml);
         const adaptationSets: Array<AdaptationSet> = [];
@@ -27,7 +28,7 @@ export class ManifestParser {
                 isLive,
                 duration,
             },
-            adaptationSets,
+            adaptationSets: [adaptationSets.filter((a) => a.type === 'video')[0], adaptationSets.filter((a) => a.type === 'audio')[0]],
         };
 
         // console.log('streamDescriptor:', streamDescriptor); // tslint:disable-line
