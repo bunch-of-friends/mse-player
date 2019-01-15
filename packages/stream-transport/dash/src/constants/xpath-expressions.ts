@@ -1,5 +1,6 @@
 export const TYPE = '*/@type';
 export const DURATION = '*/@mediaPresentationDuration';
+export const PERIOD = '*//xmlns:Period';
 export const ADAPTATION_SET = '*//xmlns:AdaptationSet';
 export const CONTENT_TYPE = '@contentType';
 export const MIME_TYPES = '@mimeType';

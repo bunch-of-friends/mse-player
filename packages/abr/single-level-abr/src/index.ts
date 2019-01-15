@@ -10,6 +10,6 @@ export class SingleLevelAbr extends Abr {
     }
 
     public getAdaptationSets(): Array<AdaptationSet> {
-        return this.streamDescriptor.adaptationSets;
+        return this.streamDescriptor.periods[0].adaptationSets;
     }
 }

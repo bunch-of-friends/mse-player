@@ -1,4 +1,4 @@
-import { AdaptationSet, AdaptationSetType, HttpHandlerBase, Representation, MimeType, XpathHelper, StreamDescriptor } from '@mse-player/core';
+import { AdaptationSet, AdaptationSetType, HttpHandlerBase, Representation, MimeType, XpathHelper, StreamDescriptor, Period } from '@mse-player/core';
 import { TemplateSegmentProvider, TemplateSegmentMetadata } from './template-segment-provider';
 import * as Expressions from './constants/xpath-expressions';
 
@@ -16,21 +16,33 @@ export class ManifestParser {
 
         const isLive = streamInfo.type === 'dynamic';
         const duration = this.getSecondsFromManifestTimeValue(streamInfo.mediaPresentationDuration);
-        const absoluteUrl = xml.URL.replace(xml.URL.substring(xml.URL.lastIndexOf('/') + 1), '');
 
-        const adaptationSetNodes = this.xpathHelper.getNodes(Expressions.ADAPTATION_SET, xml);
-        const adaptationSets: Array<AdaptationSet> = [];
-        adaptationSetNodes.forEach(x => adaptationSets.push(this.parseAdaptationSet(x, duration, absoluteUrl)));
+        const periods = this.getPeriods(xml, duration);
+
         const streamDescriptor = {
             streamInfo: {
                 isLive,
                 duration,
             },
-            adaptationSets,
+            periods,
         };
 
-        // console.log('streamDescriptor:', streamDescriptor); // tslint:disable-line
+        console.log('streamDescriptor:', streamDescriptor); // tslint:disable-line
         return streamDescriptor;
+    }
+
+    private getPeriods(xml: Document, duration: number) {
+        const absoluteUrl = xml.URL.replace(xml.URL.substring(xml.URL.lastIndexOf('/') + 1), '');
+        const periods: Array<Period> = [];
+        const periodNodes = this.xpathHelper.getNodes(Expressions.PERIOD, xml);
+        periodNodes.forEach(x => {
+            const adaptationSetNodes = this.xpathHelper.getNodes(Expressions.ADAPTATION_SET, xml);
+            const adaptationSets: Array<AdaptationSet> = [];
+            adaptationSetNodes.forEach(x => adaptationSets.push(this.parseAdaptationSet(x, duration, absoluteUrl)));
+            periods.push({ adaptationSets });
+        });
+
+        return periods;
     }
 
     private parseAdaptationSet(adaptationSetNode: Node, assetDuration: number, absoluteUrl: string) {

@@ -14,7 +14,7 @@ export abstract class StreamTransport {
 
 export interface StreamDescriptor {
     streamInfo: StreamInfo;
-    adaptationSets: Array<AdaptationSet>;
+    periods: Array<Period>;
 }
 
 export interface StreamInfo {
@@ -39,6 +39,10 @@ export enum AdaptationSetType {
 export enum MimeType {
     Video = 'video/mp4',
     Audio = 'audio/mp4',
+}
+
+export interface Period {
+    adaptationSets: Array<AdaptationSet>;
 }
 
 export interface AdaptationSet {
