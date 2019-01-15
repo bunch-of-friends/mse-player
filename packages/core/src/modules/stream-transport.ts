@@ -36,6 +36,11 @@ export enum AdaptationSetType {
     Audio = 'audio',
 }
 
+export enum MimeType {
+    Video = 'video/mp4',
+    Audio = 'audio/mp4',
+}
+
 export interface AdaptationSet {
     type: AdaptationSetType;
     mimeType: string;

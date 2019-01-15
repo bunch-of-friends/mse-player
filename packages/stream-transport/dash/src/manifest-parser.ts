@@ -1,4 +1,4 @@
-import { AdaptationSet, AdaptationSetType, HttpHandlerBase, Representation, XpathHelper, StreamDescriptor } from '@mse-player/core';
+import { AdaptationSet, AdaptationSetType, HttpHandlerBase, Representation, MimeType, XpathHelper, StreamDescriptor } from '@mse-player/core';
 import { TemplateSegmentProvider, TemplateSegmentMetadata } from './template-segment-provider';
 import * as Expressions from './constants/xpath-expressions';
 
@@ -21,7 +21,6 @@ export class ManifestParser {
         const adaptationSetNodes = this.xpathHelper.getNodes(Expressions.ADAPTATION_SET, xml);
         const adaptationSets: Array<AdaptationSet> = [];
         adaptationSetNodes.forEach(x => adaptationSets.push(this.parseAdaptationSet(x, duration, absoluteUrl)));
-
         const streamDescriptor = {
             streamInfo: {
                 isLive,
@@ -35,7 +34,9 @@ export class ManifestParser {
     }
 
     private parseAdaptationSet(adaptationSetNode: Node, assetDuration: number, absoluteUrl: string) {
-        const type = this.xpathHelper.getSingleAttribute(Expressions.CONTENT_TYPE, adaptationSetNode);
+        const mimeType = this.getMimeType(adaptationSetNode);
+        const type = this.getType(adaptationSetNode, mimeType);
+
         const initTemplate = this.xpathHelper.getSingleAttribute(Expressions.INIT_TEMPLATE, adaptationSetNode);
         const mediaTemplate = this.xpathHelper.getSingleAttribute(Expressions.MEDIA_TEMPLATE, adaptationSetNode);
         const defaultCodecs = this.xpathHelper.getSingleAttribute(Expressions.CODECS, adaptationSetNode);
@@ -46,11 +47,7 @@ export class ManifestParser {
         const segmentMetadata = { assetDuration, initTemplate, mediaTemplate, type, absoluteUrl, timescale, segmentDurations };
 
         representationNodes.forEach(y => representations.push(this.parseRepresentation(y, segmentMetadata, defaultCodecs)));
-        return {
-            type: type as AdaptationSetType,
-            mimeType: this.xpathHelper.getSingleAttribute(Expressions.MIME_TYPES, adaptationSetNode),
-            representations: representations,
-        };
+        return { type, mimeType, representations };
     }
 
     private parseRepresentation(representationNode: Node, segmentInfo: TemplateSegmentMetadata, defaultCodecs: string) {
@@ -128,5 +125,21 @@ export class ManifestParser {
             const timescale = parseInt(this.xpathHelper.getSingleAttribute(Expressions.SEGMENT_TIMESCALE, adaptationSetNode), 0);
             return [{ delta: duration, repeats: 100000 }]; // TODO: calculate how many times to repeat
         }
+    }
+
+    private getMimeType(adaptationSetNode: Node) {
+        let mimeType = this.xpathHelper.getSingleAttribute(Expressions.MIME_TYPES, adaptationSetNode);
+        if (!mimeType) {
+            mimeType = this.xpathHelper.getSingleAttribute(Expressions.REPRESENTATION_MIME_TYPES, adaptationSetNode);
+        }
+        return mimeType;
+    }
+
+    private getType(adaptationSetNode: Node, mimeType: string): AdaptationSetType {
+        let type = this.xpathHelper.getSingleAttribute(Expressions.CONTENT_TYPE, adaptationSetNode) as AdaptationSetType;
+        if (!type) {
+            type = mimeType === MimeType.Video ? AdaptationSetType.Video : AdaptationSetType.Audio;
+        }
+        return type;
     }
 }

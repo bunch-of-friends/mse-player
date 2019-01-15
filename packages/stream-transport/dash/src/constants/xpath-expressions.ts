@@ -3,6 +3,7 @@ export const DURATION = '*/@mediaPresentationDuration';
 export const ADAPTATION_SET = '*//xmlns:AdaptationSet';
 export const CONTENT_TYPE = '@contentType';
 export const MIME_TYPES = '@mimeType';
+export const REPRESENTATION_MIME_TYPES = 'xmlns:Representation/@mimeType';
 export const INIT_TEMPLATE = 'xmlns:SegmentTemplate/@initialization';
 export const MEDIA_TEMPLATE = 'xmlns:SegmentTemplate/@media';
 export const REPRESENTATION = 'xmlns:Representation';
