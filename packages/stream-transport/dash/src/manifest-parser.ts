@@ -38,7 +38,7 @@ export class ManifestParser {
         periodNodes.forEach(x => {
             const adaptationSetNodes = this.xpathHelper.getNodes(Expressions.ADAPTATION_SET, xml);
             const adaptationSets: Array<AdaptationSet> = [];
-            adaptationSetNodes.forEach(x => adaptationSets.push(this.parseAdaptationSet(x, duration, absoluteUrl)));
+            adaptationSetNodes.forEach(y => adaptationSets.push(this.parseAdaptationSet(y, duration, absoluteUrl)));
             periods.push({ adaptationSets });
         });
 
